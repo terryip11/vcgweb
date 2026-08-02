@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VCG Web — 創健佳商業事務所
 
-## Getting Started
+香港私人貸款及中小企融資配對平台（Next.js 16 + Supabase + Cloudflare R2）。
 
-First, run the development server:
+## 功能概覽
+
+- 私人貸款比較、中小企八成信貸擔保問卷、政府基金（ESS / TVP / BUD / EMF）資格自測
+- 會員中心、Lead 文件上傳（R2）
+- 推廣夥伴（Affiliate）計劃及自助後台
+- 管理後台（Leads、產品、活動、Analytics、Affiliate 審核）
+
+## 本地開發
 
 ```bash
+npm install
+cp .env.local.example .env.local
+# 編輯 .env.local 填入 Supabase / R2 等金鑰
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+開啟 [http://localhost:3001](http://localhost:3001)（請在 `.env.local` 設定 `NEXT_PUBLIC_SITE_URL=http://localhost:3001`）。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 環境變數
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+複製 `.env.local.example` 並填寫：
 
-## Learn More
+| 變數 | 必填 | 說明 |
+|------|------|------|
+| `NEXT_PUBLIC_SUPABASE_URL` | 是 | Supabase 專案 URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 是 | Supabase anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | 是 | 伺服器端 API / Admin |
+| `NEXT_PUBLIC_SITE_URL` | 生產必填 | 正式域名 |
+| `R2_*` | 文件上傳 | Cloudflare R2 |
+| `RESEND_API_KEY` | 可選 | 新 Lead / Affiliate 電郵通知 |
+| `TURNSTILE_*` | 生產建議 | Cloudflare Turnstile 防 spam |
 
-To learn more about Next.js, take a look at the following resources:
+## Supabase Migration
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+在 Supabase SQL Editor **依序**執行：
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+supabase/migrations/001_initial_schema.sql
+supabase/migrations/002_update_sme_campaign.sql
+supabase/migrations/003_profiles.sql
+supabase/migrations/004_profile_phone_sync.sql
+supabase/migrations/005_admin_role.sql
+supabase/migrations/006_media_assets.sql
+supabase/migrations/007_affiliate_referrals.sql
+supabase/migrations/008_affiliate_portal.sql
+supabase/migrations/009_profiles_role_security.sql
+```
 
-## Deploy on Vercel
+## R2 設定
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+node scripts/test-r2.mjs          # 測試連線
+node scripts/configure-r2-cors.mjs # 瀏覽器直傳 CORS
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## PWA（可安裝到手機主畫面）
+
+本站已設定 Progressive Web App：
+
+- `app/manifest.ts` — 應用名稱、圖示、快捷方式
+- `public/sw.js` — 離線快取與離線頁
+- 手機可「加入主畫面」像 App 一樣開啟
+
+**正式上線必須 HTTPS**（Vercel 預設已支援）。本地測試安裝需用：
+
+```bash
+npm run dev -- --experimental-https
+```
+
+或在 Chrome DevTools → Application → Manifest 檢查設定。
+
+## 部署（Vercel 建議）
+
+1. 連接 GitHub repo
+2. 設定所有 `.env.local.example` 中的生產環境變數
+3. 確認 `NEXT_PUBLIC_SITE_URL` 為正式域名
+4. 執行上述 Supabase migrations
+
+## 指令
+
+```bash
+npm run dev      # 開發伺服器
+npm run build    # 生產建置
+npm run lint     # ESLint
+```
+
+## 管理員
+
+- 預設 admin email：`vcgrouphk@gmail.com`（見 migration 005 或 `ADMIN_EMAILS`）
+- 後台：`/admin`
+
+## 法律頁面
+
+- `/privacy` — 私隱政策
+- `/disclaimer` — 免責聲明
+- `/partner/terms` — 推廣夥伴條款
