@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import LeadStatusBadge from "@/components/admin/LeadStatusBadge";
+import MemberUpdatePanel from "@/components/admin/MemberUpdatePanel";
 import {
   formatDateTime,
   formatHKD,
@@ -86,6 +87,8 @@ export default async function AdminMemberDetailPage({
               <dd className="font-medium text-slate-900">{member.leadCount}</dd>
             </div>
           </dl>
+
+          <MemberUpdatePanel member={member} />
         </div>
 
         <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm lg:col-span-2">

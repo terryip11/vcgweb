@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { AffiliatePartner } from "@/types";
+import AffiliateCommissionsList from "@/components/admin/AffiliateCommissionsList";
+import type { AffiliatePartner, AffiliatePartnerPerformanceStats } from "@/types";
 
 const STATUS_LABELS: Record<AffiliatePartner["status"], string> = {
   pending: "待審核",
@@ -13,8 +14,10 @@ const STATUS_LABELS: Record<AffiliatePartner["status"], string> = {
 
 export default function AffiliatePartnerActions({
   partner,
+  stats,
 }: {
   partner: AffiliatePartner;
+  stats?: AffiliatePartnerPerformanceStats;
 }) {
   const router = useRouter();
   const [referralCode, setReferralCode] = useState(partner.referralCode ?? "");
@@ -28,11 +31,53 @@ export default function AffiliatePartnerActions({
   const [periodLabel, setPeriodLabel] = useState(
     new Date().toISOString().slice(0, 7),
   );
-  const [settleLeads, setSettleLeads] = useState("");
-  const [settleAmount, setSettleAmount] = useState("");
+  const [settleLeads, setSettleLeads] = useState(
+    stats?.monthLeads ? String(stats.monthLeads) : "",
+  );
+  const [settleAmount, setSettleAmount] = useState(() => {
+    if (stats?.monthLeads && partner.commissionCplHkd) {
+      return String(stats.monthLeads * partner.commissionCplHkd);
+    }
+    return "";
+  });
   const [settleLoading, setSettleLoading] = useState(false);
+  const [periodLoading, setPeriodLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  async function fillPeriodStats() {
+    if (!periodLabel.trim()) return;
+    setPeriodLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch(
+        `/api/admin/affiliates/${partner.id}/period-stats?period=${encodeURIComponent(periodLabel.trim())}`,
+      );
+      if (!res.ok) {
+        setMessage("無法取得該月查詢數");
+        return;
+      }
+      const data = (await res.json()) as {
+        leadCount: number;
+        suggestedAmountHkd: number | null;
+      };
+      setSettleLeads(String(data.leadCount));
+      if (data.suggestedAmountHkd != null) {
+        setSettleAmount(String(data.suggestedAmountHkd));
+      } else if (commissionCpl && data.leadCount > 0) {
+        setSettleAmount(String(Number(commissionCpl) * data.leadCount));
+      }
+      setMessage(`已帶入 ${periodLabel} 香港 IP 查詢 ${data.leadCount} 宗`);
+    } finally {
+      setPeriodLoading(false);
+    }
+  }
 
   async function update(status?: AffiliatePartner["status"]) {
+    if (status === "approved" && !referralCode.trim()) {
+      setMessage("批准前請先設定推廣代碼 (ref)");
+      return;
+    }
+
     setLoading(true);
     setMessage(null);
 
@@ -49,11 +94,18 @@ export default function AffiliatePartnerActions({
 
     setLoading(false);
     if (!res.ok) {
-      setMessage("更新失敗");
+      const data = (await res.json()) as { error?: string };
+      setMessage(data.error ?? "更新失敗");
       return;
     }
 
-    setMessage("已儲存");
+    if (status === "approved") {
+      setMessage("已批准，已電郵通知申請人");
+    } else if (status === "rejected") {
+      setMessage("已拒絕，已電郵通知申請人");
+    } else {
+      setMessage("已儲存");
+    }
     router.refresh();
   }
 
@@ -82,6 +134,7 @@ export default function AffiliatePartnerActions({
     }
 
     setMessage(markPaid ? "已記錄並標記為已支付" : "已建立待結算記錄");
+    setRefreshKey((k) => k + 1);
     router.refresh();
   }
 
@@ -164,6 +217,14 @@ export default function AffiliatePartnerActions({
         <button
           type="button"
           disabled={loading}
+          onClick={() => void update("suspended")}
+          className="rounded-lg bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-300 disabled:opacity-60"
+        >
+          暫停
+        </button>
+        <button
+          type="button"
+          disabled={loading}
           onClick={() => void update()}
           className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-60"
         >
@@ -201,6 +262,14 @@ export default function AffiliatePartnerActions({
         <div className="mt-2 flex flex-wrap gap-2">
           <button
             type="button"
+            disabled={periodLoading || !referralCode.trim()}
+            onClick={() => void fillPeriodStats()}
+            className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-800 hover:bg-teal-100 disabled:opacity-60"
+          >
+            {periodLoading ? "載入中…" : "帶入該月香港 IP 查詢數"}
+          </button>
+          <button
+            type="button"
             disabled={settleLoading}
             onClick={() => void createSettlement(false)}
             className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-60"
@@ -216,6 +285,10 @@ export default function AffiliatePartnerActions({
             記錄已支付
           </button>
         </div>
+        <AffiliateCommissionsList
+          affiliateId={partner.id}
+          refreshKey={refreshKey}
+        />
       </div>
 
       <p className="text-xs text-slate-500">

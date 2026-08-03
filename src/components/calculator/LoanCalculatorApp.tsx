@@ -6,14 +6,16 @@ import BankSelect from "@/components/calculator/BankSelect";
 import CategorySelect from "@/components/calculator/CategorySelect";
 import {
   calcDsr,
-  calcPlan,
+  calcEffectivePropertyValuation,
   calcRevolvingLoan,
   calcStressExtraPayment,
   calcTermLoan,
   emptyProperty,
   emptyRevolvingLoan,
   emptyTermLoan,
+  formatAprPercent,
   formatHKD,
+  formatMonthlyFlatPercent,
   formatPercent,
   REVOLVING_RATES,
   type PropertyStressInput,
@@ -190,9 +192,6 @@ export default function LoanCalculatorApp() {
   );
   const [property, setProperty] = useState<PropertyStressInput>(emptyProperty());
   const [monthlyIncome, setMonthlyIncome] = useState(0);
-  const [planAmount, setPlanAmount] = useState(0);
-  const [planFlatRate, setPlanFlatRate] = useState(0);
-  const [planTerm, setPlanTerm] = useState(0);
 
   const termResults = useMemo(
     () => termLoans.map((l) => ({ loan: l, result: calcTermLoan(l) })),
@@ -222,21 +221,10 @@ export default function LoanCalculatorApp() {
       0,
     );
 
-    const under12FromTerm = termResults.reduce(
-      (s, r) => s + (r.result?.under12Debt ?? 0),
-      0,
-    );
-    const under12FromRev = revolvingLoans.reduce(
-      (s, l) => s + l.under12Debt,
-      0,
-    );
-    const under12Total = under12FromTerm + under12FromRev;
-
     return {
       totalPrincipal: termPrincipal + revPrincipal,
       totalMonthly: termMonthly + revMonthly,
       totalOutstanding: termOutstanding + revOutstanding,
-      under12Total,
     };
   }, [termLoans, termResults, revolvingLoans, revolvingResults]);
 
@@ -245,19 +233,25 @@ export default function LoanCalculatorApp() {
     property.ltvRatio,
   );
 
+  const effectiveValuation = calcEffectivePropertyValuation(
+    property.propertyValuation,
+    property.ownershipRatio,
+  );
+
   const dsr = calcDsr({
-    totalMonthlyPayment: totals.totalMonthly,
+    loanMonthlyPayment: totals.totalMonthly,
+    mortgageMonthly: property.mortgageMonthly,
+    rent: property.rent,
     stressExtraPayment: stressExtra,
     totalOutstanding: totals.totalOutstanding,
-    under12Total: totals.under12Total,
     monthlyIncome,
   });
 
-  const plan = calcPlan({
-    amount: planAmount,
-    monthlyFlatRate: planFlatRate / 100,
-    termMonths: planTerm,
-  });
+  const dsrTotalMonthly =
+    totals.totalMonthly +
+    property.mortgageMonthly +
+    property.rent +
+    stressExtra;
 
   function updateTermLoan(id: string, patch: Partial<TermLoanInput>) {
     setTermLoans((prev) =>
@@ -280,7 +274,7 @@ export default function LoanCalculatorApp() {
             <p className="mt-2 max-w-2xl text-sm text-blue-100 sm:text-base">
               參考 Excel
               試算表邏輯，計算現有貸款月供、月平息、APR、DSR
-              壓力測試及新貸款還款計劃。
+              供款比率及物業壓力測試。
             </p>
           </div>
         </div>
@@ -368,36 +362,28 @@ export default function LoanCalculatorApp() {
                   </div>
 
                   {result && (
-                    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+                    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
                       <ResultCell
                         label="欠款金額"
                         sublabel="(剩餘期數×月供)"
-                        value={formatHKD(result.outstanding)}
+                        value={formatHKD(result.outstanding, 2)}
                         highlight
                       />
                       <ResultCell
                         label="月平息"
-                        value={formatPercent(result.monthlyFlat)}
+                        value={formatMonthlyFlatPercent(result.monthlyFlat)}
                       />
                       <ResultCell
                         label="APR"
-                        value={formatPercent(result.apr)}
-                      />
-                      <ResultCell
-                        label="年利率"
-                        value={formatPercent(result.annualRate)}
+                        value={formatAprPercent(result.apr)}
                       />
                       <ResultCell
                         label="利息部分"
-                        value={formatHKD(result.interestPortion, 0)}
+                        value={formatHKD(result.interestPortion, 2)}
                       />
                       <ResultCell
                         label="本金部分"
-                        value={formatHKD(result.principalPortion, 0)}
-                      />
-                      <ResultCell
-                        label="未滿12期欠款"
-                        value={formatHKD(result.under12Debt)}
+                        value={formatHKD(result.principalPortion, 2)}
                       />
                     </div>
                   )}
@@ -488,14 +474,6 @@ export default function LoanCalculatorApp() {
                         step={1000}
                       />
                       <NumberInput
-                        label="未滿12期欠款"
-                        value={loan.under12Debt}
-                        onChange={(v) =>
-                          updateRevolving(loan.id, { under12Debt: v ?? 0 })
-                        }
-                        step={1000}
-                      />
-                      <NumberInput
                         label="總期數"
                         value={loan.totalPeriods}
                         onChange={(v) =>
@@ -505,31 +483,27 @@ export default function LoanCalculatorApp() {
                     </div>
 
                     {result && (
-                      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+                      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
                         <ResultCell
                           label="月供（自動）"
-                          value={formatHKD(result.monthlyPayment)}
+                          value={formatHKD(result.monthlyPayment, 2)}
                           highlight
                         />
                         <ResultCell
                           label="月平息"
-                          value={formatPercent(result.monthlyFlat)}
+                          value={formatMonthlyFlatPercent(result.monthlyFlat)}
                         />
                         <ResultCell
                           label="APR"
-                          value={formatPercent(result.apr)}
-                        />
-                        <ResultCell
-                          label="年利率"
-                          value={formatPercent(result.annualRate)}
+                          value={formatAprPercent(result.apr)}
                         />
                         <ResultCell
                           label="利息部分"
-                          value={formatHKD(result.interestPortion, 0)}
+                          value={formatHKD(result.interestPortion, 2)}
                         />
                         <ResultCell
                           label="本金部分"
-                          value={formatHKD(result.principalPortion, 0)}
+                          value={formatHKD(result.principalPortion, 2)}
                         />
                       </div>
                     )}
@@ -552,25 +526,20 @@ export default function LoanCalculatorApp() {
           {/* Summary */}
           <section className="rounded-2xl border border-blue-100 bg-blue-50 p-5 sm:p-6">
             <SectionTitle title="③ 貸款匯總" />
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               <ResultCell
                 label="總貸款金額"
-                value={formatHKD(totals.totalPrincipal)}
+                value={formatHKD(totals.totalPrincipal, 2)}
                 highlight
               />
               <ResultCell
                 label="總月供"
-                value={formatHKD(totals.totalMonthly)}
+                value={formatHKD(totals.totalMonthly, 2)}
                 highlight
               />
               <ResultCell
                 label="總欠款金額"
-                value={formatHKD(totals.totalOutstanding)}
-                highlight
-              />
-              <ResultCell
-                label="未滿12期欠款合計"
-                value={formatHKD(totals.under12Total)}
+                value={formatHKD(totals.totalOutstanding, 2)}
                 highlight
               />
             </div>
@@ -580,7 +549,7 @@ export default function LoanCalculatorApp() {
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <SectionTitle
               title="④ 物業壓力測試"
-              subtitle="輸入按揭資料，計算加息壓力下的額外月供"
+              subtitle="輸入物業估價、業權比率及按揭資料，計算加息壓力下的額外月供"
             />
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -590,12 +559,24 @@ export default function LoanCalculatorApp() {
                 onChange={(v) => setProperty((p) => ({ ...p, name: v }))}
               />
               <NumberInput
-                label="物價"
-                value={property.propertyPrice}
+                label="物業估價"
+                value={property.propertyValuation}
                 onChange={(v) =>
-                  setProperty((p) => ({ ...p, propertyPrice: v ?? 0 }))
+                  setProperty((p) => ({ ...p, propertyValuation: v ?? 0 }))
                 }
                 step={100000}
+              />
+              <NumberInput
+                label="業權比率"
+                value={+(property.ownershipRatio * 100).toFixed(4)}
+                onChange={(v) =>
+                  setProperty((p) => ({
+                    ...p,
+                    ownershipRatio: Math.min(100, Math.max(0, (v ?? 0) / 100)),
+                  }))
+                }
+                step={0.01}
+                suffix="%"
               />
               <NumberInput
                 label="按揭金額"
@@ -628,32 +609,39 @@ export default function LoanCalculatorApp() {
               />
               <NumberInput
                 label="按揭成數 / 壓力比例"
-                value={+(property.ltvRatio * 100).toFixed(2)}
+                value={+(property.ltvRatio * 100).toFixed(4)}
                 onChange={(v) =>
                   setProperty((p) => ({ ...p, ltvRatio: (v ?? 0) / 100 }))
                 }
-                step={0.1}
+                step={0.01}
                 suffix="%"
               />
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <ResultCell
+                label="有效物業估價"
+                sublabel="物業估價 × 業權比率"
+                value={formatHKD(effectiveValuation, 2)}
+                highlight
+              />
               <ResultCell
                 label="壓力測試額外月供"
-                value={formatHKD(stressExtra)}
+                value={formatHKD(stressExtra, 2)}
                 highlight
               />
               <ResultCell
                 label="按揭成數"
                 value={formatPercent(
-                  property.propertyPrice > 0
-                    ? property.mortgageAmount / property.propertyPrice
+                  effectiveValuation > 0
+                    ? property.mortgageAmount / effectiveValuation
                     : 0,
+                  2,
                 )}
               />
               <ResultCell
                 label="公式"
-                value={`${formatHKD(property.mortgageMonthly)} × ${formatPercent(property.ltvRatio, 1)}`}
+                value={`${formatHKD(property.mortgageMonthly, 2)} × ${formatPercent(property.ltvRatio, 2)}`}
               />
             </div>
           </section>
@@ -662,7 +650,7 @@ export default function LoanCalculatorApp() {
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <SectionTitle
               title="⑤ DSR 供款比率評估"
-              subtitle="私人貸款 DSR 上限 70%，按揭 DSR 上限 80%"
+              subtitle="DSR = (總月供 + 按揭月供 + 租金 + 壓力額外月供) ÷ 月收入"
             />
 
             <div className="mb-4 max-w-xs">
@@ -680,7 +668,7 @@ export default function LoanCalculatorApp() {
                 <div className="grid grid-cols-2 gap-2">
                   <ResultCell
                     label="DSR 現有比率"
-                    value={formatPercent(dsr.currentDsr)}
+                    value={formatPercent(dsr.currentDsr, 2)}
                     warn={dsr.currentDsr > dsr.privateDsrLimit}
                   />
                   <ResultCell
@@ -689,21 +677,16 @@ export default function LoanCalculatorApp() {
                   />
                   <ResultCell
                     label="DSR 上限金額"
-                    value={formatHKD(dsr.privateDsrMaxPayment)}
+                    value={formatHKD(dsr.privateDsrMaxPayment, 2)}
                   />
                   <ResultCell
                     label="UCE 比率 (<20x)"
-                    value={`${dsr.uceRatio.toFixed(1)}x`}
+                    value={`${dsr.uceRatio.toFixed(2)}x`}
                     warn={dsr.uceRatio > 20}
                   />
                   <ResultCell
                     label="UCE 上限金額"
-                    value={formatHKD(dsr.uceLimit)}
-                  />
-                  <ResultCell
-                    label="D/A 負債比率 (<70%)"
-                    value={formatPercent(dsr.daRatio)}
-                    warn={dsr.daRatio > 0.7}
+                    value={formatHKD(dsr.uceLimit, 2)}
                   />
                 </div>
               </div>
@@ -713,7 +696,7 @@ export default function LoanCalculatorApp() {
                 <div className="grid grid-cols-2 gap-2">
                   <ResultCell
                     label="DSR 現有比率"
-                    value={formatPercent(dsr.currentDsr)}
+                    value={formatPercent(dsr.currentDsr, 2)}
                     warn={dsr.currentDsr > dsr.mortgageDsrLimit}
                   />
                   <ResultCell
@@ -722,19 +705,19 @@ export default function LoanCalculatorApp() {
                   />
                   <ResultCell
                     label="DSR 上限金額"
-                    value={formatHKD(dsr.mortgageDsrMaxPayment)}
+                    value={formatHKD(dsr.mortgageDsrMaxPayment, 2)}
                   />
                   <ResultCell
                     label="UCE 上限 (<30x)"
-                    value={formatHKD(dsr.uceLimitMortgage)}
+                    value={formatHKD(dsr.uceLimitMortgage, 2)}
                   />
                   <ResultCell
                     label="D/A 按揭資產/年"
-                    value={formatHKD(dsr.mortgageRemainingCapacity)}
+                    value={formatHKD(dsr.mortgageRemainingCapacity, 2)}
                   />
                   <ResultCell
                     label="DSR 剩餘資金/月"
-                    value={formatHKD(dsr.remainingIncomeAfterDsr)}
+                    value={formatHKD(dsr.remainingIncomeAfterDsr, 2)}
                     highlight
                   />
                 </div>
@@ -742,61 +725,13 @@ export default function LoanCalculatorApp() {
             </div>
 
             <p className="mt-4 text-xs text-slate-400">
-              DSR = (總月供 {formatHKD(totals.totalMonthly)} + 壓力額外月供{" "}
-              {formatHKD(stressExtra)}) ÷ 月收入 {formatHKD(monthlyIncome)} ={" "}
-              {formatPercent(dsr.currentDsr)}
+              DSR = (總月供 {formatHKD(totals.totalMonthly, 2)} + 按揭月供{" "}
+              {formatHKD(property.mortgageMonthly, 2)} + 租金{" "}
+              {formatHKD(property.rent, 2)} + 壓力額外月供{" "}
+              {formatHKD(stressExtra, 2)}) ÷ 月收入{" "}
+              {formatHKD(monthlyIncome, 2)} = {formatHKD(dsrTotalMonthly, 2)} ÷{" "}
+              {formatHKD(monthlyIncome, 2)} = {formatPercent(dsr.currentDsr, 2)}
             </p>
-          </section>
-
-          {/* PLAN new loan */}
-          <section className="rounded-2xl border border-amber-200 bg-amber-50/50 p-5 shadow-sm sm:p-6">
-            <SectionTitle
-              title="⑥ 新貸款 PLAN 計算"
-              subtitle="月平息模式：月供 = 本金/期數 + 本金 × 月平息率"
-            />
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <NumberInput
-                label="PLAN 金額"
-                value={planAmount}
-                onChange={(v) => setPlanAmount(v ?? 0)}
-                step={5000}
-              />
-              <NumberInput
-                label="月平息率 (%)"
-                value={planFlatRate}
-                onChange={(v) => setPlanFlatRate(v ?? 0)}
-                step={0.01}
-                suffix="%"
-              />
-              <NumberInput
-                label="總期數（月）"
-                value={planTerm}
-                onChange={(v) => setPlanTerm(v ?? 0)}
-              />
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <ResultCell
-                label="每月利息"
-                value={formatHKD(plan.monthlyInterest, 2)}
-              />
-              <ResultCell
-                label="總利息"
-                value={formatHKD(plan.totalInterest, 0)}
-              />
-              <ResultCell
-                label="月供"
-                value={formatHKD(plan.monthlyPayment, 2)}
-                highlight
-              />
-              <ResultCell
-                label="總還款額"
-                value={formatHKD(plan.totalRepayment, 0)}
-                highlight
-              />
-            </div>
-
           </section>
 
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs leading-relaxed text-slate-400">

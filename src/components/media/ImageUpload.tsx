@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MEDIA_CATEGORY_LABELS } from "@/lib/r2/config";
 import type { MediaEntityType } from "@/types";
 
@@ -11,8 +11,20 @@ interface ImageUploadProps {
   label?: string;
   accept?: string;
   currentUrl?: string;
-  onUploaded?: (url: string) => void;
+  onUploaded?: (
+    url: string,
+    meta?: {
+      fileName: string;
+      assetId?: string;
+      mimeType?: string;
+      localPreview?: string;
+      category?: string;
+    },
+  ) => void;
   disabled?: boolean;
+  requireConfirm?: boolean;
+  /** 由父層顯示預覽時隱藏內建縮圖 */
+  hidePreview?: boolean;
 }
 
 export default function ImageUpload({
@@ -24,11 +36,32 @@ export default function ImageUpload({
   currentUrl,
   onUploaded,
   disabled = false,
+  requireConfirm = false,
+  hidePreview = false,
 }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(currentUrl ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingPreview, setPendingPreview] = useState("");
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+
+  useEffect(() => {
+    setPreview(currentUrl ?? "");
+    setPendingFile(null);
+    setPendingPreview("");
+    setUploadSuccess(false);
+    setError(null);
+  }, [currentUrl, category]);
+
+  useEffect(() => {
+    return () => {
+      if (pendingPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(pendingPreview);
+      }
+    };
+  }, [pendingPreview]);
 
   async function handleFile(file: File) {
     if (!entityId) {
@@ -36,8 +69,11 @@ export default function ImageUpload({
       return;
     }
 
+    const uploadCategory = category;
+
     setUploading(true);
     setError(null);
+    setUploadSuccess(false);
 
     try {
       const presignRes = await fetch("/api/media/presign", {
@@ -46,7 +82,7 @@ export default function ImageUpload({
         body: JSON.stringify({
           entityType,
           entityId,
-          category,
+          category: uploadCategory,
           fileName: file.name,
           mimeType: file.type,
           sizeBytes: file.size,
@@ -85,7 +121,7 @@ export default function ImageUpload({
           objectKey: presignData.objectKey,
           entityType,
           entityId,
-          category,
+          category: uploadCategory,
           originalName: file.name,
           mimeType: file.type,
           sizeBytes: file.size,
@@ -103,16 +139,34 @@ export default function ImageUpload({
         return;
       }
 
-      if (confirmData.url) {
-        setPreview(confirmData.url);
-        onUploaded?.(confirmData.url);
-      } else if (presignData.assetId) {
+      let uploadedUrl = confirmData.url;
+
+      if (!uploadedUrl && presignData.assetId) {
         const viewRes = await fetch(`/api/media/${presignData.assetId}`);
-        const viewData = (await viewRes.json()) as { url?: string };
-        if (viewData.url) {
-          setPreview(viewData.url);
-          onUploaded?.(viewData.url);
+        if (viewRes.ok) {
+          const viewData = (await viewRes.json()) as { url?: string };
+          uploadedUrl = viewData.url;
         }
+      }
+
+      const localPreview =
+        file.type !== "application/pdf" ? URL.createObjectURL(file) : undefined;
+
+      if (presignData.assetId) {
+        setPreview(localPreview ?? uploadedUrl ?? "");
+        setPendingFile(null);
+        if (pendingPreview.startsWith("blob:")) {
+          URL.revokeObjectURL(pendingPreview);
+        }
+        setPendingPreview("");
+        setUploadSuccess(true);
+        onUploaded?.(uploadedUrl ?? "", {
+          fileName: file.name,
+          assetId: presignData.assetId,
+          mimeType: file.type,
+          localPreview,
+          category: uploadCategory,
+        });
       }
     } catch (err) {
       console.error("ImageUpload failed:", err);
@@ -126,8 +180,39 @@ export default function ImageUpload({
     }
   }
 
+  function handleFileSelect(file: File) {
+    setError(null);
+    setUploadSuccess(false);
+
+    if (requireConfirm) {
+      if (pendingPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(pendingPreview);
+      }
+      const objectUrl =
+        file.type === "application/pdf" ? "" : URL.createObjectURL(file);
+      setPendingFile(file);
+      setPendingPreview(objectUrl);
+      return;
+    }
+
+    void handleFile(file);
+  }
+
+  function cancelPending() {
+    setPendingFile(null);
+    if (pendingPreview.startsWith("blob:")) {
+      URL.revokeObjectURL(pendingPreview);
+    }
+    setPendingPreview("");
+    setError(null);
+  }
+
   const categoryLabel = MEDIA_CATEGORY_LABELS[category] ?? category;
-  const isPdf = preview.endsWith(".pdf") || preview.includes("pdf");
+  const displayPreview = pendingFile ? pendingPreview : preview;
+  const isPdf =
+    pendingFile?.type === "application/pdf" ||
+    preview.endsWith(".pdf") ||
+    preview.includes("pdf");
 
   return (
     <div className="space-y-3">
@@ -137,46 +222,97 @@ export default function ImageUpload({
         </label>
       )}
 
-      {preview && !isPdf && (
+      {!hidePreview && displayPreview && !isPdf && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={preview}
+          src={displayPreview}
           alt={categoryLabel}
           className="h-32 w-full rounded-xl border border-slate-200 object-cover"
         />
       )}
 
-      {preview && isPdf && (
+      {!hidePreview && isPdf && (preview || pendingFile) && (
         <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          PDF 已上傳
+          PDF{pendingFile ? `：${pendingFile.name}` : " 已上傳"}
         </div>
       )}
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept={accept}
-        className="hidden"
-        disabled={disabled || uploading || !entityId}
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) void handleFile(file);
-          e.target.value = "";
-        }}
-      />
+      {pendingFile && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          {pendingPreview && pendingFile.type !== "application/pdf" && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={pendingPreview}
+              alt="待確認預覽"
+              className="mb-3 h-32 w-full rounded-lg border border-amber-100 bg-white object-contain"
+            />
+          )}
+          <p className="text-sm font-medium text-amber-900">
+            確認上傳「{categoryLabel}」？
+          </p>
+          <p className="mt-1 text-xs text-amber-800">{pendingFile.name}</p>
+          <p className="mt-2 text-xs text-amber-700">
+            請確認檔案無誤後才上傳
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => void handleFile(pendingFile)}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-60"
+            >
+              {uploading ? "上傳中…" : "確認上傳"}
+            </button>
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={cancelPending}
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
+            >
+              取消
+            </button>
+          </div>
+        </div>
+      )}
 
-      <button
-        type="button"
-        disabled={disabled || uploading || !entityId}
-        onClick={() => inputRef.current?.click()}
-        className="rounded-xl border border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-slate-600 transition hover:border-blue-400 hover:text-blue-600 disabled:opacity-50"
-      >
-        {uploading
-          ? "上傳中…"
-          : preview
-            ? `更換${categoryLabel}`
-            : `上傳${categoryLabel}`}
-      </button>
+      {!pendingFile && (
+        <>
+          <input
+            ref={inputRef}
+            type="file"
+            accept={accept}
+            className="hidden"
+            disabled={disabled || uploading || !entityId}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleFileSelect(file);
+              e.target.value = "";
+            }}
+          />
+
+          <button
+            type="button"
+            disabled={disabled || uploading || !entityId}
+            onClick={() => inputRef.current?.click()}
+            className="rounded-xl border border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-slate-600 transition hover:border-blue-400 hover:text-blue-600 disabled:opacity-50"
+          >
+            {uploading
+              ? "上傳中…"
+              : preview
+                ? `更換${categoryLabel}`
+                : `上傳${categoryLabel}`}
+          </button>
+        </>
+      )}
+
+      {uploadSuccess && !pendingFile && (
+        <div
+          role="status"
+          className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700"
+        >
+          ✓ {categoryLabel} — 已上傳資料
+        </div>
+      )}
 
       {!entityId && (
         <p className="text-xs text-amber-600">請先儲存項目後再上傳圖片</p>

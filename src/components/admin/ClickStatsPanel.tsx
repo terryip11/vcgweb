@@ -7,13 +7,17 @@ export default function ClickStatsPanel({ stats }: { stats: AdminClickStats }) {
 
   return (
     <div className="space-y-6">
+      <p className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-500">
+        以下數據僅統計香港 IP 的點擊及查詢；同一香港 IP 對同一 ref 24 小時內只計 1 次點擊，同一電話 24 小時內只計 1 宗查詢。海外或 VPN 流量不計入。
+      </p>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">總點擊數</p>
+          <p className="text-sm text-slate-500">總點擊數（香港 IP）</p>
           <p className="mt-2 text-3xl font-bold text-slate-900">{stats.total}</p>
         </div>
         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">本週點擊</p>
+          <p className="text-sm text-slate-500">本週點擊（香港 IP）</p>
           <p className="mt-2 text-3xl font-bold text-blue-600">
             {stats.weekTotal}
           </p>
@@ -22,7 +26,9 @@ export default function ClickStatsPanel({ stats }: { stats: AdminClickStats }) {
 
       {stats.byProduct.length > 0 && (
         <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-sm font-bold text-slate-900">產品點擊排行</h2>
+          <h2 className="mb-4 text-sm font-bold text-slate-900">
+            產品點擊排行（香港 IP）
+          </h2>
           <ul className="space-y-2">
             {stats.byProduct.map((item) => (
               <li
@@ -39,7 +45,9 @@ export default function ClickStatsPanel({ stats }: { stats: AdminClickStats }) {
 
       {stats.byCampaign.length > 0 && (
         <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-sm font-bold text-slate-900">活動點擊排行</h2>
+          <h2 className="mb-4 text-sm font-bold text-slate-900">
+            活動點擊排行（香港 IP）
+          </h2>
           <ul className="space-y-2">
             {stats.byCampaign.map((item) => (
               <li
@@ -56,7 +64,9 @@ export default function ClickStatsPanel({ stats }: { stats: AdminClickStats }) {
 
       {sourceEntries.length > 0 && (
         <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-sm font-bold text-slate-900">點擊來源</h2>
+          <h2 className="mb-4 text-sm font-bold text-slate-900">
+            點擊來源（香港 IP）
+          </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {sourceEntries.map(([source, count]) => (
               <div
@@ -105,9 +115,9 @@ export default function ClickStatsPanel({ stats }: { stats: AdminClickStats }) {
 
       {stats.total === 0 && (
         <div className="rounded-2xl border border-slate-100 bg-white px-6 py-12 text-center shadow-sm">
-          <p className="text-sm text-slate-500">暫無點擊數據</p>
+          <p className="text-sm text-slate-500">暫無香港 IP 點擊數據</p>
           <p className="mt-1 text-xs text-slate-400">
-            用戶點擊「立即申請」或活動橫幅 CTA 後會開始記錄
+            用戶由香港 IP 點擊「立即申請」或活動橫幅 CTA 後會開始記錄
           </p>
         </div>
       )}

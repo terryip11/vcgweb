@@ -1,9 +1,21 @@
 import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/admin/auth";
 import { createAffiliateCommissionSettlement } from "@/lib/supabase/affiliate";
+import { getAffiliateCommissions } from "@/lib/supabase/admin";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
+}
+
+export async function GET(_request: Request, context: RouteContext) {
+  const auth = await requireAdminApi();
+  if (!auth) {
+    return NextResponse.json({ error: "未授權" }, { status: 403 });
+  }
+
+  const { id } = await context.params;
+  const commissions = await getAffiliateCommissions(auth.supabase, id);
+  return NextResponse.json({ commissions });
 }
 
 export async function POST(request: Request, context: RouteContext) {

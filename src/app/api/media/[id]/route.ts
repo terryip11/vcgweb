@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { isAdminUser } from "@/lib/admin/auth";
+import { authorizeLeadMediaAccess } from "@/lib/media/auth";
 import { getPrivateMediaUrl, getPublicMediaUrl } from "@/lib/r2/urls";
 import { getMediaById } from "@/lib/supabase/media";
+import { createServiceClient } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
 
 interface RouteContext {
@@ -14,8 +16,13 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "伺服器設定錯誤" }, { status: 500 });
   }
 
+  const service = createServiceClient();
+  if (!service) {
+    return NextResponse.json({ error: "伺服器設定錯誤" }, { status: 500 });
+  }
+
   const { id } = await context.params;
-  const asset = await getMediaById(supabase, id);
+  const asset = await getMediaById(service, id);
 
   if (!asset) {
     return NextResponse.json({ error: "找不到檔案" }, { status: 404 });
@@ -25,21 +32,20 @@ export async function GET(_request: Request, context: RouteContext) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAdmin = user ? await isAdminUser(supabase, user) : false;
   const isOwner =
     asset.entityType === "profile" &&
     user &&
     asset.entityId === user.id;
 
-  let canView = isAdmin || isOwner || asset.isPublic;
+  let canView = isOwner || asset.isPublic;
 
-  if (!canView && asset.entityType === "lead" && user && asset.entityId) {
-    const { data: lead } = await supabase
-      .from("leads")
-      .select("user_id")
-      .eq("id", asset.entityId)
-      .single();
-    canView = lead?.user_id === user.id;
+  if (!canView && asset.entityType === "lead" && asset.entityId) {
+    const auth = await authorizeLeadMediaAccess(supabase, user, asset.entityId);
+    canView = auth.ok;
+  }
+
+  if (!canView && user) {
+    canView = await isAdminUser(supabase, user);
   }
 
   if (!canView) {

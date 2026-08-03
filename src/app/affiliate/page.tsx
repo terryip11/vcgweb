@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import AffiliateCommissionPlanInfo from "@/components/affiliate/AffiliateCommissionPlanInfo";
 import AffiliateStatsOverview from "@/components/affiliate/AffiliateStatsOverview";
 import ReferralToolkit from "@/components/affiliate/ReferralToolkit";
 import PageHero from "@/components/layout/PageHero";
@@ -35,7 +36,7 @@ export default async function AffiliateDashboardPage() {
       <PageHero
         badge="Affiliate 後台"
         title={`你好，${partner.name}`}
-        subtitle={`推廣代碼 ${code} · 數據即時更新`}
+        subtitle={`推廣代碼 ${code} · 僅統計香港 IP 的點擊及查詢`}
       />
 
       <section className="py-10">
@@ -57,6 +58,7 @@ export default async function AffiliateDashboardPage() {
             </a>
           </div>
 
+          <AffiliateCommissionPlanInfo />
           <AffiliateStatsOverview stats={stats} commissions={commissions} />
           <ReferralToolkit referralCode={code} siteOrigin={siteOrigin} />
         </div>

@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { notifyAdminNewLead } from "@/lib/notifications/lead-email";
+import { getAffiliateClickCountryCode } from "@/lib/affiliate/click-dedup";
+import { hasRecentCountedLeadByPhone } from "@/lib/affiliate/lead-dedup";
+import {
+  HK_PHONE_INVALID_MESSAGE,
+  normalizeHKPhoneForStorage,
+} from "@/lib/phone/hk-phone";
 import { guardPublicApi } from "@/lib/security/public-api";
 import type { LeadPayload } from "@/types";
 
@@ -26,6 +32,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const normalizedPhone = normalizeHKPhoneForStorage(body.phone);
+    if (!normalizedPhone) {
+      return NextResponse.json(
+        { error: HK_PHONE_INVALID_MESSAGE },
+        { status: 400 },
+      );
+    }
+
     const authClient = await createClient();
     let userId: string | null = null;
     if (authClient) {
@@ -35,9 +49,23 @@ export async function POST(request: Request) {
       userId = user?.id ?? null;
     }
 
+    const countryCode = getAffiliateClickCountryCode(request);
+    const referralCode = body.referralCode?.trim().toUpperCase() || null;
+
+    const supabase = createServiceClient();
+    if (!supabase) {
+      console.error("[Lead] Supabase not configured");
+      return NextResponse.json({ error: "伺服器設定錯誤" }, { status: 503 });
+    }
+
+    let countsForStats = true;
+    if (await hasRecentCountedLeadByPhone(supabase, normalizedPhone, countryCode)) {
+      countsForStats = false;
+    }
+
     const leadData = {
       name: body.name.trim(),
-      phone: body.phone.trim(),
+      phone: normalizedPhone,
       email: body.email?.trim() || null,
       loan_amount: body.loanAmount ?? null,
       loan_category: body.loanCategory ?? null,
@@ -46,14 +74,10 @@ export async function POST(request: Request) {
       status: "new",
       notes: body.notes?.trim() || null,
       user_id: userId,
-      referral_code: body.referralCode?.trim().toUpperCase() || null,
+      referral_code: referralCode,
+      country_code: countryCode,
+      counts_for_stats: countsForStats,
     };
-
-    const supabase = createServiceClient();
-    if (!supabase) {
-      console.error("[Lead] Supabase not configured");
-      return NextResponse.json({ error: "伺服器設定錯誤" }, { status: 503 });
-    }
 
     const { data, error } = await supabase
       .from("leads")
@@ -77,7 +101,7 @@ export async function POST(request: Request) {
       notes: leadData.notes ?? undefined,
     }).catch(() => {});
 
-    return NextResponse.json({ success: true, id: data.id });
+    return NextResponse.json({ success: true, id: data.id, counted: countsForStats });
   } catch {
     return NextResponse.json({ error: "伺服器錯誤" }, { status: 500 });
   }

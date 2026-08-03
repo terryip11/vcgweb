@@ -6,6 +6,11 @@ import TurnstileWidget, {
   useTurnstileRequired,
 } from "@/components/security/TurnstileWidget";
 import { getReferralCodeForLead } from "@/lib/analytics/track-click";
+import {
+  HK_PHONE_HINT,
+  HK_PHONE_INVALID_MESSAGE,
+  normalizeHKPhoneForStorage,
+} from "@/lib/phone/hk-phone";
 import type { EligibilityResult } from "@/data/sme-eligibility-questions";
 
 const WHATSAPP_BASE = "https://wa.me/85264754756?text=";
@@ -42,6 +47,13 @@ export default function SmeLeadCaptureForm({ result }: SmeLeadCaptureFormProps) 
       setError("請完成人機驗證");
       return;
     }
+
+    const normalizedPhone = normalizeHKPhoneForStorage(phone);
+    if (!normalizedPhone) {
+      setError(HK_PHONE_INVALID_MESSAGE);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -51,7 +63,7 @@ export default function SmeLeadCaptureForm({ result }: SmeLeadCaptureFormProps) 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
-          phone,
+          phone: normalizedPhone,
           email: email.trim() || undefined,
           loanAmount: amount ? Number(amount) : undefined,
           loanCategory: "sme",
@@ -122,11 +134,14 @@ export default function SmeLeadCaptureForm({ result }: SmeLeadCaptureFormProps) 
         <input
           required
           type="tel"
+          inputMode="tel"
+          autoComplete="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          placeholder="電話 *"
+          placeholder="香港電話 *（例如 91234567）"
           className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"
         />
+        <p className="text-xs text-slate-400">{HK_PHONE_HINT}</p>
         <input
           type="email"
           value={email}

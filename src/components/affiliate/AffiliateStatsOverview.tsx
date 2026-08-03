@@ -16,10 +16,18 @@ export default function AffiliateStatsOverview({
   commissions: AffiliateCommission[];
 }) {
   const cards = [
-    { label: "總點擊", value: stats.totalClicks, sub: `本週 +${stats.weekClicks}` },
-    { label: "總查詢", value: stats.totalLeads, sub: `本週 +${stats.weekLeads}` },
     {
-      label: "本月查詢",
+      label: "總點擊（香港 IP）",
+      value: stats.totalClicks,
+      sub: `本週 +${stats.weekClicks}`,
+    },
+    {
+      label: "總查詢（香港 IP）",
+      value: stats.totalLeads,
+      sub: `本週 +${stats.weekLeads}`,
+    },
+    {
+      label: "本月查詢（香港 IP）",
       value: stats.monthLeads,
       sub: stats.commissionCplHkd
         ? `CPL ${formatHkd(stats.commissionCplHkd)}`
@@ -28,7 +36,7 @@ export default function AffiliateStatsOverview({
     {
       label: "待結算（估算）",
       value: formatHkd(stats.estimatedPendingHkd),
-      sub: `已結算 ${formatHkd(stats.paidTotalHkd)}`,
+      sub: `CPL 估算 · 已結算 ${formatHkd(stats.paidTotalHkd)}`,
       isText: true,
     },
   ];
@@ -52,7 +60,7 @@ export default function AffiliateStatsOverview({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <h2 className="text-sm font-bold text-slate-900">最近有效查詢</h2>
+          <h2 className="text-sm font-bold text-slate-900">最近有效查詢（香港 IP）</h2>
           {stats.recentLeads.length === 0 ? (
             <p className="mt-4 text-sm text-slate-500">暫無帶 ref 的查詢</p>
           ) : (
@@ -109,7 +117,10 @@ export default function AffiliateStatsOverview({
       </div>
 
       <p className="text-xs text-slate-400">
-        待結算金額為估算值，實際佣金以 VCG 月結對賬及書面協議為準。如有疑問請{" "}
+        統計僅包含香港 IP 的點擊及查詢（海外或 VPN 流量不計入）。同一香港 IP
+        對同一 ref 連結 24 小時內只計 1 次有效點擊；同一電話 24 小時內只計 1 宗有效查詢。
+        「待結算（估算）」僅含 CPL 查詢佣金，不含 CPA 成功批核 1% 獎賞（滿 3 個月觀察期後人工核實）。
+        實際佣金以 VCG 月結對賬及書面協議為準。如有疑問請{" "}
         <Link href="/partner#apply" className="text-teal-600 hover:underline">
           聯絡我們
         </Link>

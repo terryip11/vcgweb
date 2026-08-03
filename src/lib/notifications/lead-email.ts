@@ -28,15 +28,18 @@ function getNotifyEmail(): string | null {
   );
 }
 
-async function sendAdminEmail(subject: string, text: string): Promise<void> {
+async function sendEmail(
+  to: string | string[],
+  subject: string,
+  text: string,
+): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY?.trim();
-  const to = getNotifyEmail();
   const from =
     process.env.NOTIFY_FROM_EMAIL?.trim() || "VCG 通知 <onboarding@resend.dev>";
 
-  if (!apiKey || !to) {
+  if (!apiKey || !to || (Array.isArray(to) && to.length === 0)) {
     console.info("[Email notification skipped]", { to: !!to, apiKey: !!apiKey });
-    return;
+    return false;
   }
 
   try {
@@ -46,16 +49,30 @@ async function sendAdminEmail(subject: string, text: string): Promise<void> {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from, to: [to], subject, text }),
+      body: JSON.stringify({
+        from,
+        to: Array.isArray(to) ? to : [to],
+        subject,
+        text,
+      }),
     });
 
     if (!res.ok) {
       const err = await res.text();
       console.error("Resend error:", err);
+      return false;
     }
+    return true;
   } catch (err) {
     console.error("Email send failed:", err);
+    return false;
   }
+}
+
+async function sendAdminEmail(subject: string, text: string): Promise<void> {
+  const to = getNotifyEmail();
+  if (!to) return;
+  await sendEmail(to, subject, text);
 }
 
 export async function notifyAdminNewLead(lead: LeadEmailData): Promise<void> {
@@ -93,6 +110,59 @@ export async function notifyAdminNewAffiliate(
 
   await sendAdminEmail(
     `[VCG 新推廣夥伴申請] ${partner.name}`,
-    `收到新的推廣夥伴申請：\n\n${lines}\n\n請登入審核：${getSiteUrl()}/admin/affiliates`,
+    `收到新的推廣夥伴申請：\n\n${lines}\n\n請登入審核：${getSiteUrl()}/admin/affiliates?status=pending`,
+  );
+}
+
+interface AffiliateStatusEmailData {
+  name: string;
+  email: string;
+  referralCode?: string;
+}
+
+export async function notifyAffiliateApproved(
+  partner: AffiliateStatusEmailData,
+): Promise<void> {
+  const siteUrl = getSiteUrl();
+  const code = partner.referralCode?.trim().toUpperCase();
+  const refLine = code
+    ? `\n推廣代碼：${code}\n專屬連結：${siteUrl}/compare?ref=${code}`
+    : "";
+
+  await sendEmail(
+    partner.email,
+    `[VCG] 推廣夥伴申請已獲批准`,
+    `${partner.name} 您好，
+
+恭喜！您的 VCG 推廣夥伴申請已獲批准。${refLine}
+
+夥伴後台：${siteUrl}/affiliate
+會員中心：${siteUrl}/member
+
+請使用申請時的電郵登入會員帳戶，即可進入推廣後台查看數據、推廣連結及素材。
+
+如有疑問，歡迎 WhatsApp 聯絡我們：85264754756
+
+VCG 創健佳商業事務所
+${siteUrl}`,
+  );
+}
+
+export async function notifyAffiliateRejected(
+  partner: AffiliateStatusEmailData,
+): Promise<void> {
+  const siteUrl = getSiteUrl();
+
+  await sendEmail(
+    partner.email,
+    `[VCG] 推廣夥伴申請結果`,
+    `${partner.name} 您好，
+
+感謝您申請 VCG 推廣夥伴計劃。很抱歉，此次申請未能通過審核。
+
+如您認為資料有誤或希望了解詳情，歡迎 WhatsApp 聯絡：85264754756
+
+VCG 創健佳商業事務所
+${siteUrl}`,
   );
 }

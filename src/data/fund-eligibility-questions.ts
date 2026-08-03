@@ -4,7 +4,7 @@ import type {
   EligibilityResult,
 } from "@/data/sme-eligibility-questions";
 
-export type FundSchemeId = "ess" | "tvp" | "bud" | "emf";
+export type FundSchemeId = "ess" | "bud" | "emf";
 
 export interface FundQuizConfig {
   id: FundSchemeId;
@@ -77,53 +77,6 @@ export const ESS_ELIGIBILITY_QUESTIONS: EligibilityQuestion[] = [
     question: "能否提供實質業務運作證明（如 MPF、合約、發票等）？",
     required: false,
     failMessage: "建議預先準備營運證明文件。",
-  },
-];
-
-/** 參考創新科技署科技券（TVP）要求 */
-export const TVP_ELIGIBILITY_QUESTIONS: EligibilityQuestion[] = [
-  COMMON_HK_REGISTERED,
-  COMMON_NON_LISTED,
-  {
-    id: "sme-operating",
-    question: "企業是否為已營運的本地中小企（非新成立空殼公司）？",
-    hint: "TVP 旨在協助已有業務的中小企採用科技方案。",
-    required: true,
-    failMessage: "TVP 適用於已營運的本地中小企。",
-  },
-  {
-    id: "tech-adoption",
-    question:
-      "項目是否涉及採用科技服務或方案（如 ERP、CRM、網店、cybersecurity 等）？",
-    hint: "須為提升生產力或業務效率的科技應用，而非一般營運開支。",
-    required: true,
-    failMessage: "TVP 資助採用科技服務及方案，不適用於一般營運開支。",
-  },
-  {
-    id: "registered-provider",
-    question: "是否計劃使用已登記的 TVP 服務供應商？",
-    hint: "申請須透過創新科技署登記名單內的服務供應商。",
-    required: true,
-    failMessage: "TVP 要求使用已登記的服務供應商。",
-  },
-  {
-    id: "cost-sharing",
-    question: "企業是否願意承擔項目成本 25%（政府資助 75%）？",
-    required: true,
-    failMessage: "TVP 資助比例為 75%，企業須自付 25%。",
-  },
-  {
-    id: "funding-cap",
-    question: "企業累計 TVP 資助是否仍在 HK$60 萬上限以內？",
-    hint: "每間企業累計資助上限為 HK$60 萬。",
-    required: true,
-    failMessage: "已達或超出 TVP 累計資助上限的企業不可再申請。",
-  },
-  {
-    id: "quotation-ready",
-    question: "能否取得服務供應商的報價及項目方案？",
-    required: false,
-    failMessage: "建議預先向 TVP 服務供應商取得報價。",
   },
 ];
 
@@ -240,29 +193,6 @@ export const FUND_QUIZ_CONFIGS: Record<FundSchemeId, FundQuizConfig> = {
     eligibleSummary:
       "根據初步評估，您的企業符合企業支援計劃（ESS）的主要條件。最終批核仍由創新科技署審核。",
   },
-  tvp: {
-    id: "tvp",
-    shortName: "TVP",
-    schemeName: "科技券（TVP）",
-    authority: "創新科技署",
-    questions: TVP_ELIGIBILITY_QUESTIONS,
-    documentChecklist: [
-      "公司註冊證書、商業登記證",
-      "TVP 服務供應商報價及方案",
-      "項目預算及時間表",
-      "實質業務運作證明",
-      "最近銀行月結單（如適用）",
-    ],
-    notEligibleTitle: "暫未符合 TVP 基本申請條件",
-    notEligibleSummary:
-      "根據您的回答，目前可能未符合科技券（TVP）的基本條件。VCG 可協助了解 ESS 或其他資助方案。",
-    partialTitle: "基本方向符合，建議完善文件",
-    partialSummary:
-      "您大致符合 TVP 的申請方向，但部分文件建議預先準備。VCG 可協助配對 TVP 服務供應商及申請策劃。",
-    eligibleTitle: "初步符合 TVP 申請條件",
-    eligibleSummary:
-      "根據初步評估，您的企業符合科技券（TVP）的主要條件。最終批核仍由創新科技署審核。",
-  },
   bud: {
     id: "bud",
     shortName: "BUD",
@@ -313,7 +243,6 @@ export const FUND_QUIZ_CONFIGS: Record<FundSchemeId, FundQuizConfig> = {
 
 export const FUND_QUIZ_SCHEME_ORDER: FundSchemeId[] = [
   "ess",
-  "tvp",
   "bud",
   "emf",
 ];

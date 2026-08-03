@@ -106,7 +106,7 @@ export default function FundSection() {
       <PageHero
         badge="政府資助"
         title="基金申請"
-        subtitle="VCG 協助本地企業申請政府資助計劃，包括 ESS 研發資助、科技券、BUD 專項基金及 EMF 市場推廣基金，提供資格評估及申請策劃。"
+        subtitle="VCG 協助本地企業申請政府資助計劃，包括 ESS 研發資助、BUD 專項基金及 EMF 市場推廣基金，提供資格評估及申請策劃。"
       />
 
       <FundPageNav />

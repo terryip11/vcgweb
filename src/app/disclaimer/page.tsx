@@ -16,7 +16,7 @@ export default function DisclaimerPage() {
 
       <h2 className="text-lg font-bold text-slate-900">1. 資訊性質</h2>
       <p>
-        本網站提供的貸款產品比較、APR 估算、資格問卷（包括 SME 八成信貸擔保、ESS / TVP / BUD / EMF 等）及基金申請資訊<strong>僅供初步參考</strong>，不構成貸款、擔保或政府資助的批核保證、法律意見或財務建議。
+        本網站提供的貸款產品比較、APR 估算、資格問卷（包括 SME 八成信貸擔保、ESS / BUD / EMF 等）及基金申請資訊<strong>僅供初步參考</strong>，不構成貸款、擔保或政府資助的批核保證、法律意見或財務建議。
       </p>
 
       <h2 className="text-lg font-bold text-slate-900">2. 產品及利率</h2>
@@ -26,7 +26,7 @@ export default function DisclaimerPage() {
 
       <h2 className="text-lg font-bold text-slate-900">3. 政府計劃</h2>
       <p>
-        政府資助計劃（ESS、科技券、BUD、EMF 等）的最終資格及批核以各政府部門及執行機構審核為準。問卷結果不代表官方審批結果。
+        政府資助計劃（ESS、BUD、EMF 等）的最終資格及批核以各政府部門及執行機構審核為準。問卷結果不代表官方審批結果。
       </p>
 
       <h2 className="text-lg font-bold text-slate-900">4. 第三方連結</h2>

@@ -6,7 +6,6 @@ const PUBLIC_ROUTES = [
   "/compare",
   "/sme",
   "/funds",
-  "/owner",
   "/calculator",
   "/partner",
   "/partner/terms",

@@ -4,7 +4,7 @@
 
 ## 功能概覽
 
-- 私人貸款比較、中小企八成信貸擔保問卷、政府基金（ESS / TVP / BUD / EMF）資格自測
+- 私人貸款比較、中小企八成信貸擔保問卷、政府基金（ESS / BUD / EMF）資格自測
 - 會員中心、Lead 文件上傳（R2）
 - 推廣夥伴（Affiliate）計劃及自助後台
 - 管理後台（Leads、產品、活動、Analytics、Affiliate 審核）

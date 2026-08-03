@@ -11,7 +11,7 @@ export default async function AdminAnalyticsPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">點擊分析</h1>
         <p className="mt-1 text-sm text-slate-500">
-          追蹤用戶點擊「立即申請」及活動橫幅 CTA 的數據
+          追蹤香港 IP 用戶點擊「立即申請」及活動橫幅 CTA 的數據
         </p>
       </div>
 

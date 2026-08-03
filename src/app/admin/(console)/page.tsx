@@ -1,20 +1,37 @@
 import Link from "next/link";
+import AdminErrorBanner from "@/components/admin/AdminErrorBanner";
+import AdminPendingAffiliateBanner from "@/components/admin/AdminPendingAffiliateBanner";
 import ClickStatsPanel from "@/components/admin/ClickStatsPanel";
-import LeadsTable from "@/components/admin/LeadsTable";
+import RecentLeadsCrud from "@/components/admin/RecentLeadsCrud";
+import { getLeadSourceLabel } from "@/lib/admin/constants";
 import { requireAdmin } from "@/lib/admin/auth";
 import {
+  countPendingAffiliatePartners,
   getAdminClickStats,
-  getAdminDashboardStats,
-  getAdminLeads,
+  queryAdminDashboardStats,
+  queryAdminLeads,
 } from "@/lib/supabase/admin";
 
 export default async function AdminDashboardPage() {
   const { supabase } = await requireAdmin();
-  const [stats, recentLeads, clickStats] = await Promise.all([
-    getAdminDashboardStats(supabase),
-    getAdminLeads(supabase, { limit: 8 }),
+
+  const [statsResult, leadsResult, clickStats, pendingAffiliateCount] =
+    await Promise.all([
+    queryAdminDashboardStats(supabase),
+    queryAdminLeads(supabase, { limit: 8, page: 1, pageSize: 8 }),
     getAdminClickStats(supabase),
+    countPendingAffiliatePartners(supabase),
   ]);
+
+  const stats = statsResult.data ?? {
+    todayNew: 0,
+    pending: 0,
+    weekTotal: 0,
+    conversionRate: 0,
+    total: 0,
+    bySource: {},
+  };
+  const recentLeads = leadsResult.data?.leads ?? [];
 
   const statCards = [
     { label: "今日新查詢", value: stats.todayNew, color: "text-blue-600" },
@@ -35,6 +52,14 @@ export default async function AdminDashboardPage() {
           共 {stats.total} 筆查詢記錄
         </p>
       </div>
+
+      {(statsResult.error || leadsResult.error) && (
+        <AdminErrorBanner
+          message={statsResult.error ?? leadsResult.error ?? "未知錯誤"}
+        />
+      )}
+
+      <AdminPendingAffiliateBanner pendingCount={pendingAffiliateCount} />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {statCards.map((card) => (
@@ -59,7 +84,9 @@ export default async function AdminDashboardPage() {
                 key={source}
                 className="rounded-xl bg-slate-50 px-4 py-3 text-sm"
               >
-                <p className="font-medium text-slate-900">{source}</p>
+                <p className="font-medium text-slate-900">
+                  {getLeadSourceLabel(source)}
+                </p>
                 <p className="text-xs text-slate-500">{count} 筆</p>
               </div>
             ))}
@@ -90,7 +117,7 @@ export default async function AdminDashboardPage() {
             查看全部 →
           </Link>
         </div>
-        <LeadsTable leads={recentLeads} />
+        <RecentLeadsCrud leads={recentLeads} />
       </div>
     </div>
   );

@@ -9,7 +9,6 @@ const navLinks = [
   { href: "/compare", label: "私人貸款" },
   { href: "/sme", label: "中小企融資" },
   { href: "/funds", label: "基金申請" },
-  { href: "/owner", label: "業主貸款" },
   { href: "/partner", label: "推廣夥伴" },
   { href: "/calculator", label: "貸款計算機" },
 ];

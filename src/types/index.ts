@@ -192,6 +192,24 @@ export interface AdminCampaignInput {
   sortOrder: number;
 }
 
+export interface AffiliatePartnerPerformanceStats {
+  totalClicks: number;
+  weekClicks: number;
+  totalLeads: number;
+  weekLeads: number;
+  monthLeads: number;
+  /** 查詢 ÷ 點擊 × 100；無點擊時為 null */
+  conversionRate: number | null;
+}
+
+export interface AffiliateTopPerformer {
+  referralCode: string;
+  partnerName: string;
+  weekLeads: number;
+  weekClicks: number;
+  totalLeads: number;
+}
+
 export interface AffiliatePartner {
   id: string;
   name: string;
@@ -207,6 +225,19 @@ export interface AffiliatePartner {
   notes?: string;
   createdAt: string;
   approvedAt?: string;
+}
+
+export interface AdminAffiliateInput {
+  name: string;
+  phone: string;
+  email?: string | null;
+  channel?: string | null;
+  website?: string | null;
+  audience?: string | null;
+  referralCode?: string | null;
+  commissionCplHkd?: number | null;
+  status?: AffiliatePartner["status"];
+  notes?: string | null;
 }
 
 export interface AffiliateCommission {
@@ -249,4 +280,10 @@ export interface AdminMember {
   role: UserRole;
   leadCount: number;
   createdAt: string;
+}
+
+export interface AdminMemberInput {
+  fullName?: string | null;
+  phone?: string | null;
+  role?: UserRole;
 }

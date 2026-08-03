@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import LeadStatusBadge from "@/components/admin/LeadStatusBadge";
+import MemberAffiliateApprovedBanner from "@/components/member/MemberAffiliateApprovedBanner";
 import MemberLeadSummary from "@/components/member/MemberLeadSummary";
 import MemberProfileForm from "@/components/member/MemberProfileForm";
+import MemberQuickLinks from "@/components/member/MemberQuickLinks";
 import MemberSignOutButton from "@/components/member/MemberSignOutButton";
 import PageHero from "@/components/layout/PageHero";
 import PageShell from "@/components/layout/PageShell";
@@ -17,6 +19,7 @@ import {
   getMemberLeads,
   getMemberProfile,
 } from "@/lib/supabase/member";
+import { isValidHKPhone } from "@/lib/phone/hk-phone";
 import {
   getAffiliatePartnerForUser,
   linkAffiliatePartnerToUser,
@@ -43,12 +46,7 @@ const QUICK_LINKS = [
   {
     href: "/funds",
     title: "基金申請",
-    desc: "ESS、科技券、BUD 等政府資助",
-  },
-  {
-    href: "/owner",
-    title: "業主貸款",
-    desc: "免抵押物業套現方案",
+    desc: "ESS、BUD、EMF 等政府資助",
   },
   {
     href: "/calculator",
@@ -70,6 +68,9 @@ export default async function MemberPage() {
   const affiliatePartner = await getAffiliatePartnerForUser(supabase, user);
   const isApprovedAffiliate =
     affiliatePartner?.status === "approved" && Boolean(affiliatePartner.referralCode);
+  const showAffiliateApprovedNotice =
+    affiliatePartner?.status === "approved" &&
+    Boolean(affiliatePartner.referralCode);
 
   const profile = await getMemberProfile(supabase, user.id);
   const leads = await getMemberLeads(supabase, user.id);
@@ -84,6 +85,10 @@ export default async function MemberPage() {
     user.phone?.replace("+852", "") ||
     "會員";
 
+  const memberPhone =
+    profile?.phone ?? user.phone?.replace(/^\+852/, "") ?? "";
+  const hasValidPhone = isValidHKPhone(memberPhone);
+
   const avatarUrl =
     profile?.avatarUrl || (user.user_metadata?.avatar_url as string | undefined);
 
@@ -97,6 +102,14 @@ export default async function MemberPage() {
 
       <section className="py-12">
         <div className="mx-auto max-w-6xl space-y-6 px-4">
+          {showAffiliateApprovedNotice && affiliatePartner?.referralCode && (
+            <MemberAffiliateApprovedBanner
+              partnerId={affiliatePartner.id}
+              referralCode={affiliatePartner.referralCode}
+              approvedAt={affiliatePartner.approvedAt}
+            />
+          )}
+
           {isApprovedAffiliate && (
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-teal-100 bg-gradient-to-r from-teal-50 to-emerald-50 p-5 shadow-sm">
               <div>
@@ -268,18 +281,7 @@ export default async function MemberPage() {
                 )}
               </div>
 
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                {QUICK_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:border-blue-200 hover:bg-blue-50/50"
-                  >
-                    <p className="font-bold text-slate-900">{link.title}</p>
-                    <p className="mt-1 text-sm text-slate-500">{link.desc}</p>
-                  </Link>
-                ))}
-              </div>
+              <MemberQuickLinks links={QUICK_LINKS} hasValidPhone={hasValidPhone} />
             </div>
           </div>
         </div>

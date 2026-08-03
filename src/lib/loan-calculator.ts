@@ -23,7 +23,6 @@ export interface TermLoanResult {
   annualRate: number;
   interestPortion: number;
   principalPortion: number;
-  under12Debt: number;
 }
 
 export interface RevolvingLoanInput {
@@ -34,7 +33,6 @@ export interface RevolvingLoanInput {
   categoryOther?: string;
   customRate?: number;
   principal: number;
-  under12Debt: number;
   outstanding: number;
   totalPeriods: number;
 }
@@ -50,20 +48,23 @@ export interface RevolvingLoanResult {
 
 export interface PropertyStressInput {
   name: string;
-  propertyPrice: number;
+  propertyValuation: number;
   mortgageAmount: number;
   mortgageMonthly: number;
   remainingPeriods: number;
   totalPeriods: number;
   rent: number;
   ltvRatio: number;
+  /** 業權比率 0–1，用於計算此物業估價所佔比例 */
+  ownershipRatio: number;
 }
 
 export interface DsrInput {
-  totalMonthlyPayment: number;
+  loanMonthlyPayment: number;
+  mortgageMonthly: number;
+  rent: number;
   stressExtraPayment: number;
   totalOutstanding: number;
-  under12Total: number;
   monthlyIncome: number;
 }
 
@@ -73,25 +74,11 @@ export interface DsrResult {
   privateDsrMaxPayment: number;
   uceRatio: number;
   uceLimit: number;
-  daRatio: number;
   mortgageDsrLimit: number;
   mortgageDsrMaxPayment: number;
   uceLimitMortgage: number;
   remainingIncomeAfterDsr: number;
   mortgageRemainingCapacity: number;
-}
-
-export interface PlanInput {
-  amount: number;
-  monthlyFlatRate: number;
-  termMonths: number;
-}
-
-export interface PlanResult {
-  monthlyInterest: number;
-  totalInterest: number;
-  monthlyPayment: number;
-  totalRepayment: number;
 }
 
 /** Excel RATE function — Newton-Raphson iteration */
@@ -131,15 +118,6 @@ export function rate(
   return isFinite(r) ? r : 0;
 }
 
-export function calcUnder12Debt(
-  remainingPeriods: number,
-  monthlyPayment: number,
-): number {
-  if (remainingPeriods <= 0 || monthlyPayment <= 0) return 0;
-  if (remainingPeriods >= 12) return monthlyPayment * 12;
-  return monthlyPayment * remainingPeriods;
-}
-
 export function calcTermLoan(loan: TermLoanInput): TermLoanResult | null {
   const { principal, monthlyPayment, totalPeriods } = loan;
   const paidPeriods = loan.paidPeriods ?? 0;
@@ -175,7 +153,6 @@ export function calcTermLoan(loan: TermLoanInput): TermLoanResult | null {
   }
 
   const interestPortion = principal * monthlyFlat;
-  const under12Debt = calcUnder12Debt(remaining, monthlyPayment);
 
   return {
     outstanding,
@@ -184,7 +161,6 @@ export function calcTermLoan(loan: TermLoanInput): TermLoanResult | null {
     annualRate,
     interestPortion,
     principalPortion,
-    under12Debt,
   };
 }
 
@@ -232,14 +208,16 @@ export function calcRevolvingLoan(
 
 export function calcDsr(input: DsrInput): DsrResult {
   const {
-    totalMonthlyPayment,
+    loanMonthlyPayment,
+    mortgageMonthly,
+    rent,
     stressExtraPayment,
     totalOutstanding,
-    under12Total,
     monthlyIncome,
   } = input;
 
-  const totalDebtService = totalMonthlyPayment + stressExtraPayment;
+  const totalDebtService =
+    loanMonthlyPayment + mortgageMonthly + rent + stressExtraPayment;
   const currentDsr =
     monthlyIncome > 0 ? totalDebtService / monthlyIncome : 0;
 
@@ -249,15 +227,11 @@ export function calcDsr(input: DsrInput): DsrResult {
     privateDsrMaxPayment: monthlyIncome * 0.7,
     uceRatio: monthlyIncome > 0 ? totalOutstanding / monthlyIncome : 0,
     uceLimit: monthlyIncome * 20,
-    daRatio:
-      monthlyIncome > 0
-        ? under12Total / (monthlyIncome * 12)
-        : 0,
     mortgageDsrLimit: 0.8,
     mortgageDsrMaxPayment: monthlyIncome * 0.8,
     uceLimitMortgage: monthlyIncome * 30,
     remainingIncomeAfterDsr:
-      monthlyIncome > 0 ? (1 - currentDsr) * monthlyIncome : 0,
+      monthlyIncome > 0 ? monthlyIncome - totalDebtService : 0,
     mortgageRemainingCapacity:
       monthlyIncome > 0
         ? monthlyIncome * 0.8 - totalDebtService
@@ -265,30 +239,12 @@ export function calcDsr(input: DsrInput): DsrResult {
   };
 }
 
-export function calcPlan(input: PlanInput): PlanResult {
-  const { amount, monthlyFlatRate, termMonths } = input;
-
-  if (amount <= 0 || termMonths <= 0) {
-    return {
-      monthlyInterest: 0,
-      totalInterest: 0,
-      monthlyPayment: 0,
-      totalRepayment: 0,
-    };
-  }
-
-  const monthlyInterest = amount * monthlyFlatRate;
-  const monthlyPrincipal = amount / termMonths;
-  const monthlyPayment = monthlyPrincipal + monthlyInterest;
-  const totalInterest = monthlyInterest * termMonths;
-  const totalRepayment = monthlyPayment * termMonths;
-
-  return {
-    monthlyInterest,
-    totalInterest,
-    monthlyPayment,
-    totalRepayment,
-  };
+export function calcEffectivePropertyValuation(
+  propertyValuation: number,
+  ownershipRatio: number,
+): number {
+  if (propertyValuation <= 0 || ownershipRatio <= 0) return 0;
+  return propertyValuation * ownershipRatio;
 }
 
 export function calcStressExtraPayment(
@@ -306,9 +262,19 @@ export function formatHKD(n: number, decimals = 0): string {
   })}`;
 }
 
-export function formatPercent(n: number, decimals = 2): string {
+export function formatPercent(n: number, decimals = 4): string {
   if (!isFinite(n)) return "—";
   return `${(n * 100).toFixed(decimals)}%`;
+}
+
+/** APR 等年化利率顯示用 3 位小數 */
+export function formatAprPercent(n: number): string {
+  return formatPercent(n, 3);
+}
+
+/** 月平息顯示用 4 位小數 */
+export function formatMonthlyFlatPercent(n: number): string {
+  return formatPercent(n, 4);
 }
 
 function newId() {
@@ -333,7 +299,6 @@ export function emptyRevolvingLoan(): RevolvingLoanInput {
     bank: "",
     category: "",
     principal: 0,
-    under12Debt: 0,
     outstanding: 0,
     totalPeriods: 0,
   };
@@ -342,12 +307,13 @@ export function emptyRevolvingLoan(): RevolvingLoanInput {
 export function emptyProperty(): PropertyStressInput {
   return {
     name: "",
-    propertyPrice: 0,
+    propertyValuation: 0,
     mortgageAmount: 0,
     mortgageMonthly: 0,
     remainingPeriods: 0,
     totalPeriods: 0,
     rent: 0,
     ltvRatio: 0,
+    ownershipRatio: 1,
   };
 }

@@ -120,7 +120,7 @@ export default function SmeEligibilityQuiz() {
   function goNext() {
     if (step < totalCount - 1) {
       setStep((s) => s + 1);
-    } else if (Object.keys(answers).length >= totalCount) {
+    } else if (allAnswered) {
       setSubmitted(true);
     }
   }
@@ -141,7 +141,10 @@ export default function SmeEligibilityQuiz() {
   }
 
   const canGoNext = Boolean(answers[current?.id]);
-  const allAnswered = Object.keys(answers).length >= totalCount;
+  const allAnswered = SME_80_ELIGIBILITY_QUESTIONS.every((q) =>
+    Boolean(answers[q.id]),
+  );
+  const canSubmitResult = step === totalCount - 1 ? allAnswered : canGoNext;
 
   if (submitted && result) {
     return (
@@ -160,6 +163,15 @@ export default function SmeEligibilityQuiz() {
 
   return (
     <div className="flex flex-col">
+      <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+        <p className="text-sm font-medium text-blue-900">
+          提示：所有問題均需回答後，方可查看評估結果
+        </p>
+        <p className="mt-1 text-xs text-blue-700">
+          標有 * 為必答題，每題請選擇「是」、「否」或「不確定」
+        </p>
+      </div>
+
       {/* 進度條 */}
       <div className="mb-5">
         <div className="mb-2 flex items-center justify-between text-xs font-medium text-slate-500">
@@ -244,7 +256,7 @@ export default function SmeEligibilityQuiz() {
         <button
           type="button"
           onClick={goNext}
-          disabled={!canGoNext}
+          disabled={!canSubmitResult}
           className="flex-1 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {step < totalCount - 1 ? "下一題" : "查看評估結果"}

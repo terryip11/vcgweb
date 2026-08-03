@@ -2,6 +2,7 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { DEFAULT_ADMIN_EMAIL } from "@/lib/admin/constants";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import type { UserRole } from "@/types";
 
 export function getAdminEmails(): string[] {
@@ -34,13 +35,29 @@ export async function getUserRole(
   return data.role as UserRole;
 }
 
+/** 將 ADMIN_EMAILS 帳戶同步寫入 profiles.role，避免 RLS 與 app 判定不一致 */
+async function syncAdminRole(user: User): Promise<void> {
+  if (!isAdminEmail(user.email)) return;
+
+  const service = createServiceClient();
+  if (!service) return;
+
+  await service
+    .from("profiles")
+    .update({ role: "admin", updated_at: new Date().toISOString() })
+    .eq("id", user.id)
+    .neq("role", "admin");
+}
+
 export async function isAdminUser(
   supabase: SupabaseClient,
   user: User,
 ): Promise<boolean> {
   const role = await getUserRole(supabase, user.id);
   if (role === "admin") return true;
-  return isAdminEmail(user.email);
+  if (!isAdminEmail(user.email)) return false;
+  await syncAdminRole(user);
+  return true;
 }
 
 export async function requireAdmin() {

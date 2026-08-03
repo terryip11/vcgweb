@@ -1,4 +1,4 @@
-const CACHE_NAME = "vcg-pwa-v1";
+const CACHE_NAME = "vcg-pwa-v2";
 const OFFLINE_URL = "/offline";
 
 const PRECACHE_URLS = ["/", OFFLINE_URL];
@@ -26,6 +26,26 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+/** 線上優先：避免舊版 JS/HTML 被快取卡住 */
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const copy = response.clone();
+      caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+    }
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    if (request.mode === "navigate") {
+      const offline = await caches.match(OFFLINE_URL);
+      if (offline) return offline;
+    }
+    throw new Error("offline");
+  }
+}
+
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
@@ -35,34 +55,5 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/api/")) return;
   if (url.pathname.startsWith("/auth/")) return;
 
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(async () => {
-          const cached = await caches.match(request);
-          return cached || caches.match(OFFLINE_URL);
-        }),
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((response) => {
-        if (response.ok && url.pathname.match(/\.(js|css|png|jpg|jpeg|webp|svg|woff2?)$/)) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-        }
-        return response;
-      });
-    }),
-  );
+  event.respondWith(networkFirst(request));
 });

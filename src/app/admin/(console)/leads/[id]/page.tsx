@@ -6,11 +6,15 @@ import LeadUpdateForm from "@/components/admin/LeadUpdateForm";
 import {
   formatDateTime,
   formatHKD,
+  getLeadSourceLabel,
   LOAN_CATEGORY_LABELS,
   whatsappUrl,
 } from "@/lib/admin/constants";
 import { requireAdmin } from "@/lib/admin/auth";
-import { getAdminLeadById } from "@/lib/supabase/admin";
+import {
+  getAdminLeadById,
+  getAdminProductById,
+} from "@/lib/supabase/admin";
 
 interface LeadDetailPageProps {
   params: Promise<{ id: string }>;
@@ -21,9 +25,14 @@ export default async function AdminLeadDetailPage({
 }: LeadDetailPageProps) {
   const { supabase } = await requireAdmin();
   const { id } = await params;
-  const lead = await getAdminLeadById(supabase, id);
+  const leadResult = await getAdminLeadById(supabase, id);
 
-  if (!lead) notFound();
+  if (leadResult.error || !leadResult.data) notFound();
+  const lead = leadResult.data;
+
+  const product = lead.productId
+    ? await getAdminProductById(supabase, lead.productId)
+    : null;
 
   const whatsappMessage = `你好 ${lead.name}，我係 VCG 創健佳，收到你嘅貸款查詢${
     lead.loanCategory
@@ -80,7 +89,9 @@ export default async function AdminLeadDetailPage({
               </div>
               <div>
                 <dt className="text-xs text-slate-500">來源</dt>
-                <dd className="mt-1 font-medium text-slate-900">{lead.source}</dd>
+                <dd className="mt-1 font-medium text-slate-900">
+                  {getLeadSourceLabel(lead.source)}
+                </dd>
               </div>
               <div>
                 <dt className="text-xs text-slate-500">推廣代碼</dt>
@@ -91,10 +102,43 @@ export default async function AdminLeadDetailPage({
               <div>
                 <dt className="text-xs text-slate-500">關聯產品</dt>
                 <dd className="mt-1 font-medium text-slate-900">
-                  {lead.productId ?? "—"}
+                  {product ? (
+                    <Link
+                      href={`/admin/products/${product.id}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {product.name}
+                    </Link>
+                  ) : (
+                    (lead.productId ?? "—")
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-500">關聯會員</dt>
+                <dd className="mt-1 font-medium text-slate-900">
+                  {lead.userId ? (
+                    <Link
+                      href={`/admin/members/${lead.userId}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      查看會員資料
+                    </Link>
+                  ) : (
+                    "—"
+                  )}
                 </dd>
               </div>
             </dl>
+
+            {lead.notes && (
+              <div className="mt-6 rounded-xl bg-slate-50 px-4 py-3">
+                <p className="text-xs font-semibold text-slate-500">現有備註</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
+                  {lead.notes}
+                </p>
+              </div>
+            )}
 
             <div className="mt-6 flex flex-wrap gap-3">
               <a

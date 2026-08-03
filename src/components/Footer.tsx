@@ -36,11 +36,6 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/owner" className="hover:text-white">
-                  業主貸款
-                </Link>
-              </li>
-              <li>
                 <Link href="/calculator" className="hover:text-white">
                   貸款計算機
                 </Link>

@@ -56,6 +56,7 @@ export const LEAD_SOURCE_LABELS: Record<string, string> = {
   fund_application: "基金申請",
   sme_quiz: "SME 問卷",
   campaign_banner: "活動橫幅",
+  admin_manual: "後台手動",
 };
 
 export function getLeadSourceLabel(source: string): string {
@@ -78,12 +79,15 @@ export const LEAD_SOURCE_FILTER_OPTIONS = [
   { value: "sme_quiz", label: "SME 問卷" },
   { value: "comparison_table", label: "比較表" },
   { value: "website", label: "網站" },
+  { value: "admin_manual", label: "後台手動" },
 ] as const;
 
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
   member: "會員",
   admin: "管理員",
 };
+
+export const USER_ROLES: UserRole[] = ["member", "admin"];
 
 export function formatHKD(amount?: number | null): string {
   if (amount == null) return "—";

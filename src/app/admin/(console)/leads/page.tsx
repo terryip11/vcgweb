@@ -1,18 +1,47 @@
-import Link from "next/link";
+import AdminErrorBanner from "@/components/admin/AdminErrorBanner";
 import ExportLeadsButton from "@/components/admin/ExportLeadsButton";
+import LeadsPagination from "@/components/admin/LeadsPagination";
 import LeadsTable from "@/components/admin/LeadsTable";
-import { LEAD_STATUSES, LEAD_SOURCE_FILTER_OPTIONS, LEAD_STATUS_LABELS } from "@/lib/admin/constants";
+import {
+  LEAD_STATUSES,
+  LEAD_SOURCE_FILTER_OPTIONS,
+  LEAD_STATUS_LABELS,
+} from "@/lib/admin/constants";
 import { requireAdmin } from "@/lib/admin/auth";
-import { getAdminLeads } from "@/lib/supabase/admin";
+import { queryAdminLeads } from "@/lib/supabase/admin";
 
 interface LeadsPageProps {
-  searchParams: Promise<{ status?: string; source?: string; q?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    source?: string;
+    q?: string;
+    ref?: string;
+    page?: string;
+  }>;
 }
+
+const PAGE_SIZE = 20;
 
 export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
   const { supabase } = await requireAdmin();
-  const { status = "all", source = "all", q = "" } = await searchParams;
-  const leads = await getAdminLeads(supabase, { status, source, search: q });
+  const params = await searchParams;
+  const status = params.status ?? "all";
+  const source = params.source ?? "all";
+  const q = params.q ?? "";
+  const referralCode = params.ref?.trim().toUpperCase() ?? "";
+  const page = Math.max(1, Number(params.page ?? "1") || 1);
+
+  const result = await queryAdminLeads(supabase, {
+    status,
+    source,
+    search: q,
+    referralCode: referralCode || undefined,
+    page,
+    pageSize: PAGE_SIZE,
+  });
+
+  const leads = result.data?.leads ?? [];
+  const total = result.data?.total ?? 0;
 
   return (
     <div className="space-y-6">
@@ -23,8 +52,15 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
             管理所有透過網站提交的貸款查詢
           </p>
         </div>
-        <ExportLeadsButton status={status} source={source} q={q} />
+        <ExportLeadsButton
+          status={status}
+          source={source}
+          q={q}
+          referralCode={referralCode}
+        />
       </div>
+
+      {result.error && <AdminErrorBanner message={result.error} />}
 
       <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
         <form className="flex flex-col gap-3 lg:flex-row lg:items-end">
@@ -84,6 +120,21 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
               ))}
             </select>
           </div>
+          <div className="lg:w-36">
+            <label
+              htmlFor="ref"
+              className="mb-1 block text-xs font-semibold text-slate-500"
+            >
+              推廣 ref
+            </label>
+            <input
+              id="ref"
+              name="ref"
+              defaultValue={referralCode}
+              placeholder="VCGKOL01"
+              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm uppercase outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
           <button
             type="submit"
             className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700"
@@ -93,8 +144,15 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
         </form>
       </div>
 
-      <p className="text-sm text-slate-500">共 {leads.length} 筆結果</p>
-      <LeadsTable leads={leads} />
+      <p className="text-sm text-slate-500">共 {total} 筆結果</p>
+      <LeadsTable leads={leads} crud />
+      <LeadsPagination
+        page={page}
+        pageSize={PAGE_SIZE}
+        total={total}
+        basePath="/admin/leads"
+        searchParams={{ status, source, q, ref: referralCode || undefined }}
+      />
     </div>
   );
 }

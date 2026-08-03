@@ -4,18 +4,21 @@ interface ExportLeadsButtonProps {
   status?: string;
   source?: string;
   q?: string;
+  referralCode?: string;
 }
 
 export default function ExportLeadsButton({
   status,
   source,
   q,
+  referralCode,
 }: ExportLeadsButtonProps) {
   function handleExport() {
     const params = new URLSearchParams();
     if (status && status !== "all") params.set("status", status);
     if (source && source !== "all") params.set("source", source);
     if (q) params.set("q", q);
+    if (referralCode) params.set("ref", referralCode);
     const qs = params.toString();
     window.location.href = `/api/admin/leads/export${qs ? `?${qs}` : ""}`;
   }

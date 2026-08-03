@@ -18,6 +18,22 @@ function mapAsset(row: Record<string, unknown>): MediaAsset {
   };
 }
 
+async function listMediaByEntity(
+  supabase: SupabaseClient,
+  entityType: MediaEntityType,
+  entityId: string,
+): Promise<MediaAsset[]> {
+  const { data, error } = await supabase
+    .from("media_assets")
+    .select("*")
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+  return data.map(mapAsset);
+}
+
 export async function attachMediaUrls(
   assets: MediaAsset[],
 ): Promise<MediaAsset[]> {
@@ -36,15 +52,7 @@ export async function getMediaByEntity(
   entityType: MediaEntityType,
   entityId: string,
 ): Promise<MediaAsset[]> {
-  const { data, error } = await supabase
-    .from("media_assets")
-    .select("*")
-    .eq("entity_type", entityType)
-    .eq("entity_id", entityId)
-    .order("created_at", { ascending: false });
-
-  if (error || !data) return [];
-  const assets = data.map(mapAsset);
+  const assets = await listMediaByEntity(supabase, entityType, entityId);
   return attachMediaUrls(assets);
 }
 
@@ -119,4 +127,23 @@ export async function deleteMediaAsset(
   const { error } = await supabase.from("media_assets").delete().eq("id", id);
   if (error) return null;
   return asset;
+}
+
+/** 刪除某實體的全部 media_assets 記錄，回傳已刪除的 object keys 供清理 R2 */
+export async function deleteMediaByEntity(
+  supabase: SupabaseClient,
+  entityType: MediaEntityType,
+  entityId: string,
+): Promise<{ assets: MediaAsset[]; error?: string }> {
+  const assets = await listMediaByEntity(supabase, entityType, entityId);
+  if (assets.length === 0) return { assets: [] };
+
+  const { error } = await supabase
+    .from("media_assets")
+    .delete()
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId);
+
+  if (error) return { assets: [], error: error.message };
+  return { assets };
 }

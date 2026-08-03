@@ -5,7 +5,6 @@ const links = [
   { href: "/compare?category=tax", label: "稅季貸款", icon: "📋" },
   { href: "/sme", label: "中小企融資", icon: "🏢" },
   { href: "/funds", label: "基金申請", icon: "🏛️" },
-  { href: "/owner", label: "業主貸款", icon: "🏠" },
   { href: "/calculator", label: "貸款計算機", icon: "🧮" },
   { href: "/partner", label: "推廣夥伴", icon: "🤝" },
 ];
@@ -14,7 +13,7 @@ export default function CategoryQuickLinks() {
   return (
     <section className="border-b border-slate-100 bg-white py-6">
       <div className="mx-auto max-w-6xl px-4">
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {links.map((link) => (
             <Link
               key={link.label}

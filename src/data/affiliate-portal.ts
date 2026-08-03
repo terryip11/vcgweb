@@ -3,7 +3,6 @@ export const AFFILIATE_LINK_TARGETS = [
   { path: "/sme", label: "中小企融資" },
   { path: "/funds", label: "政府基金申請" },
   { path: "/calculator", label: "貸款計算機" },
-  { path: "/owner", label: "業主貸款" },
 ] as const;
 
 export const AFFILIATE_PROMO_COPY = [
@@ -20,6 +19,6 @@ export const AFFILIATE_PROMO_COPY = [
   {
     id: "funds",
     title: "政府基金",
-    text: "【ESS / 科技券】政府資助計劃資格自測，VCG 免費初步評估 👉 {link}",
+    text: "【ESS / BUD / EMF】政府資助計劃資格自測，VCG 免費初步評估 👉 {link}",
   },
 ] as const;

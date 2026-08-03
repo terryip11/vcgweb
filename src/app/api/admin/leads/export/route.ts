@@ -19,8 +19,14 @@ export async function GET(request: Request) {
   const status = searchParams.get("status") ?? "all";
   const source = searchParams.get("source") ?? "all";
   const q = searchParams.get("q") ?? "";
+  const ref = searchParams.get("ref")?.trim().toUpperCase() ?? "";
 
-  const leads = await getAdminLeads(auth.supabase, { status, source, search: q });
+  const leads = await getAdminLeads(auth.supabase, {
+    status,
+    source,
+    search: q,
+    referralCode: ref || undefined,
+  });
 
   const csv = buildCsv(
     [

@@ -9,11 +9,13 @@ import { createClient } from "@/lib/supabase/client";
 function SidebarPanel({
   pathname,
   userEmail,
+  pendingAffiliateCount,
   onNavigate,
   onSignOut,
 }: {
   pathname: string;
   userEmail?: string;
+  pendingAffiliateCount?: number;
   onNavigate?: () => void;
   onSignOut: () => void;
 }) {
@@ -36,7 +38,11 @@ function SidebarPanel({
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-5">
-        <AdminNav pathname={pathname} onNavigate={onNavigate} />
+        <AdminNav
+          pathname={pathname}
+          onNavigate={onNavigate}
+          pendingAffiliateCount={pendingAffiliateCount}
+        />
       </div>
 
       <div className="border-t border-slate-100 px-4 py-4">
@@ -68,9 +74,11 @@ function SidebarPanel({
 export default function AdminShell({
   children,
   userEmail,
+  pendingAffiliateCount = 0,
 }: {
   children: React.ReactNode;
   userEmail?: string;
+  pendingAffiliateCount?: number;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -104,6 +112,7 @@ export default function AdminShell({
         <SidebarPanel
           pathname={pathname}
           userEmail={userEmail}
+          pendingAffiliateCount={pendingAffiliateCount}
           onSignOut={signOut}
         />
       </aside>
@@ -128,6 +137,7 @@ export default function AdminShell({
         <SidebarPanel
           pathname={pathname}
           userEmail={userEmail}
+          pendingAffiliateCount={pendingAffiliateCount}
           onNavigate={closeMobile}
           onSignOut={signOut}
         />

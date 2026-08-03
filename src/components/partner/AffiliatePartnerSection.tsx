@@ -58,7 +58,7 @@ export default function AffiliatePartnerSection() {
         <div className="mx-auto max-w-6xl px-4">
           <h2 className="text-xl font-bold text-slate-900">佣金模式</h2>
           <p className="mt-1 text-sm text-slate-500">
-            香港貸款業務以 CPL 起步，CPA 適合高質量渠道
+            CPL 查詢佣金即時估算；成功批核滿 3 個月可享貸款本金 1% 額外獎賞
           </p>
           <div className="mt-8 grid gap-6 sm:grid-cols-2">
             {AFFILIATE_COMMISSION_MODELS.map((model) => (

@@ -1,4 +1,5 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { AFFILIATE_HK_COUNTRY } from "@/lib/affiliate/hk-traffic";
 import { createServiceClient } from "@/lib/supabase/service";
 import type {
   AffiliateCommission,
@@ -110,18 +111,28 @@ export async function getAffiliateDashboardStats(
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
 
-  const [{ data: clicks }, { data: leads }, { data: commissions }] =
+  const [{ data: clicks }, { data: leadTimestamps }, { data: recentLeads }, { data: commissions }] =
     await Promise.all([
       service
         .from("affiliate_clicks")
         .select("created_at")
-        .eq("referral_code", code),
+        .eq("referral_code", code)
+        .eq("country_code", AFFILIATE_HK_COUNTRY)
+        .eq("counts_for_stats", true),
+      service
+        .from("leads")
+        .select("created_at")
+        .eq("referral_code", code)
+        .eq("country_code", AFFILIATE_HK_COUNTRY)
+        .eq("counts_for_stats", true),
       service
         .from("leads")
         .select("id, name, loan_category, status, created_at")
         .eq("referral_code", code)
+        .eq("country_code", AFFILIATE_HK_COUNTRY)
+        .eq("counts_for_stats", true)
         .order("created_at", { ascending: false })
-        .limit(20),
+        .limit(8),
       service
         .from("affiliate_commissions")
         .select("*")
@@ -130,7 +141,8 @@ export async function getAffiliateDashboardStats(
     ]);
 
   const clickRows = clicks ?? [];
-  const leadRows = leads ?? [];
+  const leadRows = leadTimestamps ?? [];
+  const recentLeadRows = recentLeads ?? [];
   const commissionRows = (commissions ?? []).map(mapCommission);
 
   let weekClicks = 0;
@@ -172,7 +184,7 @@ export async function getAffiliateDashboardStats(
     commissionCplHkd: cpl,
     estimatedPendingHkd,
     paidTotalHkd,
-    recentLeads: leadRows.slice(0, 8).map((row) => ({
+    recentLeads: recentLeadRows.map((row) => ({
       id: row.id as string,
       name: row.name as string,
       loanCategory: (row.loan_category as string | null) ?? undefined,

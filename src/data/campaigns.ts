@@ -31,7 +31,7 @@ export const campaigns: Campaign[] = [
     subtitle:
       "免抵押業主貸款最高達物業估值 80%，業主與企業貸款靈活配對，優化現金流",
     ctaText: "了解業主貸款",
-    ctaHref: "/owner",
+    ctaHref: "/compare?category=owner",
     badge: "VCG 獨家",
     isActive: true,
     sortOrder: 3,

@@ -64,3 +64,52 @@ export async function authorizeMediaUpload(
 
   return { ok: false, error: "未授權" };
 }
+
+type LeadRow = {
+  id: string;
+  user_id: string | null;
+  created_at: string;
+};
+
+/** 查詢 lead 媒體：管理員、lead 擁有者、或提交後 1 小時內的訪客 */
+export async function authorizeLeadMediaAccess(
+  supabase: SupabaseClient,
+  user: User | null,
+  leadId: string,
+): Promise<
+  | { ok: true; lead: LeadRow }
+  | { ok: false; error: string; status: number }
+> {
+  const service = createServiceClient();
+  if (!service) {
+    return { ok: false, error: "伺服器設定錯誤", status: 500 };
+  }
+
+  const { data: lead, error } = await service
+    .from("leads")
+    .select("id, user_id, created_at")
+    .eq("id", leadId)
+    .single();
+
+  if (error || !lead) {
+    return { ok: false, error: "找不到相關查詢記錄", status: 404 };
+  }
+
+  const row = lead as LeadRow;
+
+  if (user && (await isAdminUser(supabase, user))) {
+    return { ok: true, lead: row };
+  }
+
+  if (user && row.user_id === user.id) {
+    return { ok: true, lead: row };
+  }
+
+  const created = new Date(row.created_at).getTime();
+  const withinHour = Date.now() - created < 60 * 60 * 1000;
+  if (withinHour) {
+    return { ok: true, lead: row };
+  }
+
+  return { ok: false, error: "上傳時限已過，請聯絡 VCG", status: 403 };
+}

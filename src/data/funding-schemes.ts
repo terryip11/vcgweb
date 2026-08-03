@@ -41,29 +41,6 @@ export const fundingSchemes: FundingScheme[] = [
     contactEmail: "ess@itc.gov.hk",
   },
   {
-    id: "tvp",
-    name: "科技券（TVP）",
-    shortName: "TVP",
-    provider: "創新科技署 ITC",
-    maxFunding: "HK$600,000",
-    fundingRatio: "政府資助 75%",
-    deadline: "全年接受申請",
-    status: "ongoing",
-    summary:
-      "資助本地中小企使用科技服務及方案，提升生產力及業務效率，例如 ERP、CRM、網上商店及 cybersecurity 等。",
-    highlights: [
-      "每間企業累計資助上限 HK$60 萬",
-      "資助比例 75%，企業自付 25%",
-      "適用於已營運的本地中小企",
-    ],
-    requirements: [
-      "在香港註冊並有實質業務運作",
-      "非上市公司",
-      "使用已登記的 TVP 服務供應商",
-    ],
-    applyUrl: "https://www.itf.gov.hk/tc/funding-programmes/supporting-research/tvp/",
-  },
-  {
     id: "bud",
     name: "BUD 專項基金",
     shortName: "BUD",
