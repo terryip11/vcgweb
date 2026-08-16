@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { VcgLogoMark } from "@/components/brand/VcgLogo";
 
 export default function PwaInstallPrompt() {
   const [visible, setVisible] = useState(false);
@@ -36,9 +37,7 @@ export default function PwaInstallPrompt() {
   return (
     <div className="fixed bottom-20 left-4 right-4 z-40 mx-auto max-w-md rounded-2xl border border-blue-100 bg-white p-4 shadow-lg sm:bottom-6 sm:left-auto sm:right-6">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-700 text-xs font-bold text-white">
-          VCG
-        </div>
+        <VcgLogoMark size={40} className="shrink-0" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-slate-900">安裝 VCG App</p>
           {isIOS ? (

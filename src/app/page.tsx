@@ -10,7 +10,7 @@ import { getCampaigns } from "@/lib/supabase/queries";
 export const metadata: Metadata = {
   title: "香港私人貸款及中小企融資比較平台",
   description:
-    "VCG 創健佳 — 一站式比較私人貸款 APR、中小企八成信貸擔保、政府基金（ESS / BUD / EMF）及業主貸款，免費專人跟進。",
+    "VCG — 一站式比較私人貸款 APR、中小企八成信貸擔保、政府基金（ESS / BUD / EMF）及業主貸款，免費專人跟進。",
 };
 
 export default async function Home() {

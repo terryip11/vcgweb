@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { href: "/admin/leads", label: "客戶查詢", icon: "📋", badgeKey: null },
   { href: "/admin/products", label: "貸款產品", icon: "💳", badgeKey: null },
   { href: "/admin/campaigns", label: "行銷活動", icon: "📢", badgeKey: null },
+  { href: "/admin/blog", label: "財經資訊", icon: "📝", badgeKey: null },
   { href: "/admin/members", label: "會員", icon: "👤", badgeKey: null },
   {
     href: "/admin/affiliates",

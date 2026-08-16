@@ -35,6 +35,9 @@ export async function getProducts(): Promise<Product[]> {
     exclusiveOffer: row.exclusive_offer ?? undefined,
     applyUrl: row.apply_url ?? undefined,
     imageUrl: row.image_url ?? undefined,
+    imageSizePreset: row.image_size_preset ?? "md",
+    imageDisplayWidth: row.image_display_width ?? undefined,
+    imageDisplayHeight: row.image_display_height ?? undefined,
     isFeatured: row.is_featured,
     sortOrder: row.sort_order,
   }));

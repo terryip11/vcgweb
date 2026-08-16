@@ -3,7 +3,7 @@ import Link from "next/link";
 import LegalPageLayout from "@/components/legal/LegalPageLayout";
 
 export const metadata: Metadata = {
-  title: "免責聲明 | 創健佳商業事務所 | VCG",
+  title: "免責聲明 | VCG",
   description: "VCG 網站免責聲明 — 貸款比較、資格問卷及基金申請資訊僅供參考。",
 };
 
@@ -11,7 +11,7 @@ export default function DisclaimerPage() {
   return (
     <LegalPageLayout title="免責聲明" updated="2026年8月2日">
       <p>
-        歡迎使用創健佳商業事務所（VCG）網站。使用本網站即表示您理解並同意以下免責條款。
+        歡迎使用 VCG 網站。使用本網站即表示您理解並同意以下免責條款。
       </p>
 
       <h2 className="text-lg font-bold text-slate-900">1. 資訊性質</h2>

@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "VCG 創健佳 — 香港貸款配對平台",
+    name: "VCG — 香港貸款配對平台",
     short_name: "VCG",
     description:
       "比較私人貸款、中小企融資、政府基金申請及業主貸款。VCG 專人免費跟進。",

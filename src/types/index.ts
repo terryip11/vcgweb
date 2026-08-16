@@ -5,6 +5,14 @@ export type LoanCategory =
   | "tax"
   | "business";
 
+export type ProductImageSizePreset =
+  | "sm"
+  | "md"
+  | "lg"
+  | "wide"
+  | "tall"
+  | "custom";
+
 export interface Product {
   id: string;
   name: string;
@@ -20,6 +28,12 @@ export interface Product {
   exclusiveOffer?: string;
   applyUrl?: string;
   imageUrl?: string;
+  /** 前台 logo 顯示預設 */
+  imageSizePreset?: ProductImageSizePreset;
+  /** 自訂寬度 (px)，preset 為 custom 時使用 */
+  imageDisplayWidth?: number | null;
+  /** 自訂高度 (px)，preset 為 custom 時使用 */
+  imageDisplayHeight?: number | null;
   isFeatured: boolean;
   isActive?: boolean;
   sortOrder: number;
@@ -36,6 +50,48 @@ export interface Campaign {
   imageUrl?: string;
   isActive: boolean;
   sortOrder: number;
+}
+
+export interface BlogFaqItem {
+  question: string;
+  answer: string;
+}
+
+export type BlogCategory =
+  | "guide"
+  | "personal"
+  | "sme"
+  | "tax"
+  | "owner"
+  | "funds";
+
+export interface BlogPost {
+  slug: string;
+  title: string;
+  excerpt: string;
+  metaDescription: string;
+  keywords: string[];
+  category: BlogCategory;
+  body: string;
+  faq: BlogFaqItem[];
+  readingMinutes: number;
+  isActive: boolean;
+  publishedAt: string;
+  updatedAt?: string;
+}
+
+export interface AdminBlogInput {
+  slug: string;
+  title: string;
+  excerpt: string;
+  metaDescription: string;
+  keywords: string[];
+  category: BlogCategory;
+  body: string;
+  faq: BlogFaqItem[];
+  readingMinutes: number;
+  isActive: boolean;
+  publishedAt: string;
 }
 
 export interface LeadPayload {
@@ -174,6 +230,9 @@ export interface AdminProductInput {
   exclusiveOffer?: string | null;
   applyUrl?: string | null;
   imageUrl?: string | null;
+  imageSizePreset?: ProductImageSizePreset;
+  imageDisplayWidth?: number | null;
+  imageDisplayHeight?: number | null;
   isFeatured: boolean;
   isActive: boolean;
   sortOrder: number;

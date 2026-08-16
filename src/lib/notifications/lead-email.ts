@@ -143,7 +143,7 @@ export async function notifyAffiliateApproved(
 
 如有疑問，歡迎 WhatsApp 聯絡我們：85264754756
 
-VCG 創健佳商業事務所
+VCG
 ${siteUrl}`,
   );
 }
@@ -162,7 +162,7 @@ export async function notifyAffiliateRejected(
 
 如您認為資料有誤或希望了解詳情，歡迎 WhatsApp 聯絡：85264754756
 
-VCG 創健佳商業事務所
+VCG
 ${siteUrl}`,
   );
 }

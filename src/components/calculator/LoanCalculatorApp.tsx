@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import PageShell from "@/components/layout/PageShell";
 import BankSelect from "@/components/calculator/BankSelect";
 import CategorySelect from "@/components/calculator/CategorySelect";
 import {
@@ -266,8 +265,7 @@ export default function LoanCalculatorApp() {
   }
 
   return (
-    <PageShell>
-      <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50">
         <div className="bg-gradient-to-br from-[#0c2340] to-[#1a5080] px-4 py-10 text-white">
           <div className="mx-auto max-w-6xl">
             <h1 className="text-2xl font-bold sm:text-3xl">VCG 貸款計算機</h1>
@@ -741,6 +739,5 @@ export default function LoanCalculatorApp() {
           </div>
         </div>
       </div>
-    </PageShell>
   );
 }

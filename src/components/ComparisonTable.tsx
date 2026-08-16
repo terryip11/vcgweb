@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { trackAffiliateClick } from "@/lib/analytics/track-click";
+import { productImageDisplayFromProduct } from "@/lib/product-image-display";
 import type { LoanCategory, Product } from "@/types";
 import LeadModal from "./LeadModal";
+import ProductLogo from "./ProductLogo";
 
 const WHATSAPP = "85264754756";
 
@@ -132,11 +134,10 @@ export default function ComparisonTable({
                   }`}
                 >
                   {product.imageUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <ProductLogo
                       src={product.imageUrl}
                       alt={product.name}
-                      className="h-16 w-16 rounded-xl border border-slate-200 object-cover"
+                      {...productImageDisplayFromProduct(product)}
                     />
                   )}
                   <div>

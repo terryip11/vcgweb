@@ -6,7 +6,7 @@ import LenderPartnerSection from "@/components/partner/LenderPartnerSection";
 import TrustStats from "@/components/TrustStats";
 
 export const metadata: Metadata = {
-  title: "貸款機構合作 | 創健佳商業事務所 | VCG",
+  title: "貸款機構合作 | VCG",
   description:
     "VCG 誠邀銀行及財務公司 B2B 合作，專注中小企貸款、私人貸款及物業按揭，穩定客源助您拓展業務。",
 };

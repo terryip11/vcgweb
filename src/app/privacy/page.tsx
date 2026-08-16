@@ -3,15 +3,15 @@ import Link from "next/link";
 import LegalPageLayout from "@/components/legal/LegalPageLayout";
 
 export const metadata: Metadata = {
-  title: "私隱政策 | 創健佳商業事務所 | VCG",
-  description: "VCG 創健佳商業事務所私隱政策 — 說明我們如何收集、使用及保護您的個人資料。",
+  title: "私隱政策 | VCG",
+  description: "VCG 私隱政策 — 說明我們如何收集、使用及保護您的個人資料。",
 };
 
 export default function PrivacyPage() {
   return (
     <LegalPageLayout title="私隱政策" updated="2026年8月2日">
       <p>
-        創健佳商業事務所（「VCG」、「我們」）重視您的私隱。本政策說明當您使用本網站及相關服務時，我們如何處理個人資料。
+        VCG（「我們」）重視您的私隱。本政策說明當您使用本網站及相關服務時，我們如何處理個人資料。
       </p>
 
       <h2 className="text-lg font-bold text-slate-900">1. 收集的資料</h2>

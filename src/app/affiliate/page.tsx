@@ -13,7 +13,7 @@ import {
 import { getSiteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "推廣夥伴後台 | 創健佳商業事務所 | VCG",
+  title: "推廣夥伴後台 | VCG",
   description: "VCG 推廣夥伴自助後台 — 查看點擊、查詢及佣金，管理專屬推廣連結。",
 };
 

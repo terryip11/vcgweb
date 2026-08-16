@@ -6,7 +6,7 @@ import { getProducts } from "@/lib/supabase/queries";
 import type { LoanCategory } from "@/types";
 
 export const metadata: Metadata = {
-  title: "私人及商業貸款比較 | 創健佳商業事務所 | VCG",
+  title: "私人及商業貸款比較 | VCG",
   description:
     "比較香港私人貸款、稅季貸款、中小企及小商務貸款 APR、最高貸款額及還款期。VCG 獨家配對及專人跟進。",
 };

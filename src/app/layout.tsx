@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_TC } from "next/font/google";
+import { Suspense } from "react";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import GoogleAnalyticsPageView from "@/components/analytics/GoogleAnalyticsPageView";
 import PwaRegister from "@/components/pwa/PwaRegister";
 import { getSiteUrl } from "@/lib/site";
 import "./globals.css";
@@ -10,7 +13,7 @@ const notoSansTC = Noto_Sans_TC({
   weight: ["400", "500", "700"],
 });
 
-const siteName = "創健佳商業事務所 | VCG";
+const siteName = "VCG";
 const defaultTitle = `私人貸款與中小企融資專家 | ${siteName}`;
 const defaultDescription =
   "VCG 香港貸款配對平台 — 比較私人貸款、稅季貸款、中小企融資、政府基金申請及業主貸款。經本網申請享獨家配對及專人跟進，24 小時極速回覆。";
@@ -70,6 +73,10 @@ export default function RootLayout({
   return (
     <html lang="zh-HK" className={`${notoSansTC.variable} scroll-smooth`}>
       <body className="min-h-screen bg-white font-sans text-slate-800 antialiased">
+        <GoogleAnalytics />
+        <Suspense fallback={null}>
+          <GoogleAnalyticsPageView />
+        </Suspense>
         {children}
         <PwaRegister />
       </body>

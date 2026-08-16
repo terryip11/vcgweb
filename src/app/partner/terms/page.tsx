@@ -3,7 +3,7 @@ import Link from "next/link";
 import LegalPageLayout from "@/components/legal/LegalPageLayout";
 
 export const metadata: Metadata = {
-  title: "推廣夥伴條款 | 創健佳商業事務所 | VCG",
+  title: "推廣夥伴條款 | VCG",
   description: "VCG 推廣夥伴（Affiliate）計劃條款 — 佣金、結算及推廣規範。",
 };
 

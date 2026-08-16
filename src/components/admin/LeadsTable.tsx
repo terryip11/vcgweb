@@ -62,7 +62,7 @@ function LeadActions({
       <a
         href={whatsappUrl(
           lead.phone,
-          `你好 ${lead.name}，我係 VCG 創健佳，收到你嘅貸款查詢，想同你跟進一下。`,
+          `你好 ${lead.name}，我係 VCG，收到你嘅貸款查詢，想同你跟進一下。`,
         )}
         target="_blank"
         rel="noopener noreferrer"

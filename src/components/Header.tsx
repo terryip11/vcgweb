@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import AuthButton from "@/components/auth/AuthButton";
+import VcgLogo from "@/components/brand/VcgLogo";
 
 const navLinks = [
   { href: "/compare", label: "私人貸款" },
@@ -25,16 +26,8 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-700 text-sm font-bold text-white">
-            VCG
-          </div>
-          <div className="hidden sm:block">
-            <p className="text-sm font-bold leading-tight text-slate-900">
-              創健佳商業事務所
-            </p>
-            <p className="text-xs text-slate-400">香港貸款配對平台</p>
-          </div>
+        <Link href="/" className="flex items-center">
+          <VcgLogo size="md" showTagline responsive />
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">

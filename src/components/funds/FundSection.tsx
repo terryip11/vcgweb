@@ -271,7 +271,7 @@ export default function FundSection() {
               <div>
                 <h2 className="text-2xl font-bold text-white">VCG 基金申請協助</h2>
                 <p className="mt-3 text-sm leading-relaxed text-slate-300">
-                  創健佳協助企業評估政府資助資格、整理申請文件及策劃項目方向。我們亦提供貸款配對及中小企融資方案，一站式滿足您的資金需求。
+                  VCG 協助企業評估政府資助資格、整理申請文件及策劃項目方向。我們亦提供貸款配對及中小企融資方案，一站式滿足您的資金需求。
                 </p>
                 <ul className="mt-4 space-y-2 text-sm text-slate-300">
                   <li>✓ 免費初步資格評估</li>

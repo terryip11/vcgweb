@@ -23,16 +23,35 @@ function loadEnv() {
 }
 
 const env = loadEnv();
-const siteUrl = env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
-const origins = [
+const siteUrlRaw = env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
+let siteOrigin = "";
+if (siteUrlRaw) {
+  try {
+    siteOrigin = new URL(siteUrlRaw).origin;
+  } catch {
+    siteOrigin = siteUrlRaw;
+  }
+}
+
+const origins = new Set([
   "http://localhost:3000",
   "http://localhost:3001",
+  "http://localhost:3002",
   "http://127.0.0.1:3000",
   "http://127.0.0.1:3001",
-];
-if (siteUrl && !origins.includes(siteUrl)) {
-  origins.push(siteUrl);
+  "http://127.0.0.1:3002",
+]);
+
+for (let port = 3000; port <= 3010; port++) {
+  origins.add(`http://localhost:${port}`);
+  origins.add(`http://127.0.0.1:${port}`);
 }
+
+if (siteOrigin) {
+  origins.add(siteOrigin);
+}
+
+const allowedOrigins = [...origins];
 
 const client = new S3Client({
   region: "auto",
@@ -49,7 +68,7 @@ await client.send(
     CORSConfiguration: {
       CORSRules: [
         {
-          AllowedOrigins: origins,
+          AllowedOrigins: allowedOrigins,
           AllowedMethods: ["GET", "PUT", "HEAD"],
           AllowedHeaders: ["*"],
           ExposeHeaders: ["ETag"],
@@ -61,4 +80,4 @@ await client.send(
 );
 
 console.log("CORS configured for origins:");
-for (const o of origins) console.log("  -", o);
+for (const o of allowedOrigins) console.log("  -", o);

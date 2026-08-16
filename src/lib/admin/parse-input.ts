@@ -1,7 +1,11 @@
 import type {
   AdminCampaignInput,
+  AdminBlogInput,
   AdminProductInput,
+  BlogCategory,
+  BlogFaqItem,
   LoanCategory,
+  ProductImageSizePreset,
 } from "@/types";
 import { LOAN_CATEGORIES, linesToArray } from "@/lib/admin/constants";
 
@@ -11,6 +15,29 @@ function parseStringArray(value: unknown): string[] {
   }
   if (typeof value === "string") return linesToArray(value);
   return [];
+}
+
+const IMAGE_SIZE_PRESETS = new Set([
+  "sm",
+  "md",
+  "lg",
+  "wide",
+  "tall",
+  "custom",
+]);
+
+function parseImageSizePreset(value: unknown): ProductImageSizePreset {
+  const preset = String(value ?? "md");
+  return IMAGE_SIZE_PRESETS.has(preset)
+    ? (preset as ProductImageSizePreset)
+    : "md";
+}
+
+function parseOptionalPx(value: unknown): number | null {
+  if (value === null || value === "" || value === undefined) return null;
+  const n = Number(value);
+  if (Number.isNaN(n)) return null;
+  return Math.min(200, Math.max(24, Math.round(n)));
 }
 
 export function parseProductInput(body: Record<string, unknown>): {
@@ -74,6 +101,9 @@ export function parseProductInput(body: Record<string, unknown>): {
         body.imageUrl === null || body.imageUrl === ""
           ? null
           : String(body.imageUrl).trim(),
+      imageSizePreset: parseImageSizePreset(body.imageSizePreset),
+      imageDisplayWidth: parseOptionalPx(body.imageDisplayWidth),
+      imageDisplayHeight: parseOptionalPx(body.imageDisplayHeight),
       isFeatured: Boolean(body.isFeatured),
       isActive: body.isActive !== false,
       sortOrder: Number.isNaN(sortOrder) ? 0 : sortOrder,
@@ -115,6 +145,87 @@ export function parseCampaignInput(body: Record<string, unknown>): {
           : String(body.imageUrl).trim(),
       isActive: body.isActive !== false,
       sortOrder: Number.isNaN(sortOrder) ? 0 : sortOrder,
+    },
+  };
+}
+
+const BLOG_CATEGORIES = new Set([
+  "guide",
+  "personal",
+  "sme",
+  "tax",
+  "owner",
+  "funds",
+]);
+
+function parseFaq(value: unknown): BlogFaqItem[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const row = item as Record<string, unknown>;
+      const question = String(row.question ?? "").trim();
+      const answer = String(row.answer ?? "").trim();
+      if (!question || !answer) return null;
+      return { question, answer };
+    })
+    .filter((item): item is BlogFaqItem => item !== null);
+}
+
+export function parseBlogInput(body: Record<string, unknown>): {
+  input?: AdminBlogInput;
+  error?: string;
+} {
+  const slug = String(body.slug ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+  const title = String(body.title ?? "").trim();
+
+  if (!slug || !title) {
+    return { error: "Slug 及標題為必填" };
+  }
+
+  if (!/^[a-z0-9-]+$/.test(slug)) {
+    return { error: "Slug 只能包含小寫英文、數字及連字號" };
+  }
+
+  const category = String(body.category ?? "guide");
+  if (!BLOG_CATEGORIES.has(category)) {
+    return { error: "無效的文章分類" };
+  }
+
+  const readingMinutes = Number(body.readingMinutes ?? 5);
+  const keywordsRaw = body.keywords;
+  const keywords = Array.isArray(keywordsRaw)
+    ? keywordsRaw.map(String).map((s) => s.trim()).filter(Boolean)
+    : String(keywordsRaw ?? "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+  const publishedAtRaw = String(body.publishedAt ?? "").trim();
+  const publishedAt = publishedAtRaw
+    ? new Date(publishedAtRaw).toISOString()
+    : new Date().toISOString();
+
+  if (publishedAtRaw && Number.isNaN(new Date(publishedAtRaw).getTime())) {
+    return { error: "發佈日期格式不正確" };
+  }
+
+  return {
+    input: {
+      slug,
+      title,
+      excerpt: String(body.excerpt ?? "").trim(),
+      metaDescription: String(body.metaDescription ?? body.excerpt ?? "").trim(),
+      keywords,
+      category: category as BlogCategory,
+      body: String(body.body ?? ""),
+      faq: parseFaq(body.faq),
+      readingMinutes: Number.isNaN(readingMinutes) ? 5 : readingMinutes,
+      isActive: body.isActive !== false,
+      publishedAt,
     },
   };
 }

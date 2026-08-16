@@ -3,13 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ImageUpload from "@/components/media/ImageUpload";
+import ProductLogo from "@/components/ProductLogo";
 import {
   arrayToLines,
   LOAN_CATEGORIES,
   LOAN_CATEGORY_LABELS,
   linesToArray,
 } from "@/lib/admin/constants";
-import type { LoanCategory, Product } from "@/types";
+import {
+  PRODUCT_IMAGE_SIZE_PRESET_OPTIONS,
+  resolveProductImageDisplay,
+} from "@/lib/product-image-display";
+import type { LoanCategory, Product, ProductImageSizePreset } from "@/types";
 
 const inputClass =
   "w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100";
@@ -47,6 +52,17 @@ export default function ProductForm({
   );
   const [applyUrl, setApplyUrl] = useState(product?.applyUrl ?? "");
   const [imageUrl, setImageUrl] = useState(product?.imageUrl ?? "");
+  const [imageSizePreset, setImageSizePreset] = useState<ProductImageSizePreset>(
+    product?.imageSizePreset ?? "md",
+  );
+  const [imageDisplayWidth, setImageDisplayWidth] = useState(
+    product?.imageDisplayWidth != null ? String(product.imageDisplayWidth) : "88",
+  );
+  const [imageDisplayHeight, setImageDisplayHeight] = useState(
+    product?.imageDisplayHeight != null
+      ? String(product.imageDisplayHeight)
+      : "44",
+  );
   const [isFeatured, setIsFeatured] = useState(product?.isFeatured ?? false);
   const [isActive, setIsActive] = useState(product?.isActive !== false);
   const [sortOrder, setSortOrder] = useState(String(product?.sortOrder ?? 0));
@@ -71,6 +87,11 @@ export default function ProductForm({
       exclusiveOffer: exclusiveOffer.trim() || null,
       applyUrl: applyUrl.trim() || null,
       imageUrl: imageUrl.trim() || null,
+      imageSizePreset,
+      imageDisplayWidth:
+        imageSizePreset === "custom" ? Number(imageDisplayWidth) : null,
+      imageDisplayHeight:
+        imageSizePreset === "custom" ? Number(imageDisplayHeight) : null,
       isFeatured,
       isActive,
       sortOrder: Number(sortOrder),
@@ -308,6 +329,88 @@ export default function ProductForm({
         onUploaded={setImageUrl}
         disabled={!id.trim()}
       />
+
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <h3 className="text-sm font-bold text-slate-900">前台顯示尺寸</h3>
+        <p className="mt-1 text-xs text-slate-500">
+          比較頁 logo 框大小。不同機構 logo 比例不一，可在此調整至清晰可讀。
+        </p>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-500">
+              尺寸預設
+            </label>
+            <select
+              value={imageSizePreset}
+              onChange={(e) =>
+                setImageSizePreset(e.target.value as ProductImageSizePreset)
+              }
+              className={inputClass}
+            >
+              {PRODUCT_IMAGE_SIZE_PRESET_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label} — {option.description}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {imageSizePreset === "custom" && (
+            <>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-500">
+                  自訂寬度 (px)
+                </label>
+                <input
+                  type="number"
+                  min={24}
+                  max={200}
+                  value={imageDisplayWidth}
+                  onChange={(e) => setImageDisplayWidth(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-500">
+                  自訂高度 (px)
+                </label>
+                <input
+                  type="number"
+                  min={24}
+                  max={200}
+                  value={imageDisplayHeight}
+                  onChange={(e) => setImageDisplayHeight(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            </>
+          )}
+        </div>
+
+        {imageUrl && (
+          <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
+            <p className="mb-3 text-xs font-semibold text-slate-500">
+              比較頁預覽
+            </p>
+            <ProductLogo
+              src={imageUrl}
+              alt={name || "產品 logo"}
+              {...resolveProductImageDisplay({
+                imageSizePreset,
+                imageDisplayWidth:
+                  imageSizePreset === "custom"
+                    ? Number(imageDisplayWidth)
+                    : null,
+                imageDisplayHeight:
+                  imageSizePreset === "custom"
+                    ? Number(imageDisplayHeight)
+                    : null,
+              })}
+            />
+          </div>
+        )}
+      </div>
 
       <div className="flex flex-wrap gap-6">
         <label className="flex items-center gap-2 text-sm text-slate-700">

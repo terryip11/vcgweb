@@ -1,16 +1,17 @@
 import Link from "next/link";
+import VcgLogo from "@/components/brand/VcgLogo";
+import { getBlogPosts } from "@/lib/supabase/blog-queries";
 
-export default function Footer() {
+export default async function Footer() {
+  const blogPosts = await getBlogPosts(4);
+
   return (
     <footer className="border-t border-slate-100 bg-slate-900 py-12 text-slate-400">
       <div className="mx-auto max-w-6xl px-4">
-        <div className="mb-8 grid gap-8 sm:grid-cols-3">
+        <div className="mb-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <div className="mb-3 flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-xs font-bold text-white">
-                VCG
-              </div>
-              <span className="font-bold text-white">創健佳商業事務所</span>
+            <div className="mb-3">
+              <VcgLogo size="sm" variant="light" />
             </div>
             <p className="text-sm leading-relaxed">
               香港私人貸款及中小企融資配對平台，協助您找到最合適的財務方案。
@@ -50,6 +51,24 @@ export default function Footer() {
                   貸款機構合作
                 </Link>
               </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-white">財經資訊</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link href="/blog" className="font-medium text-white hover:text-blue-300">
+                  全部文章
+                </Link>
+              </li>
+              {blogPosts.map((post) => (
+                <li key={post.slug}>
+                  <Link href={`/blog/${post.slug}`} className="hover:text-white">
+                    {post.title}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 

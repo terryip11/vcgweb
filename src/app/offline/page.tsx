@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageShell from "@/components/layout/PageShell";
+import VcgLogo from "@/components/brand/VcgLogo";
 
 export const metadata: Metadata = {
   title: "離線",
@@ -12,8 +13,8 @@ export default function OfflinePage() {
     <PageShell>
       <section className="flex min-h-[60vh] items-center justify-center px-4 py-16">
         <div className="max-w-md text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-700 text-xl font-bold text-white">
-            VCG
+          <div className="mb-4 flex justify-center">
+            <VcgLogo size="xl" markOnly />
           </div>
           <h1 className="text-xl font-bold text-slate-900">目前離線</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">

@@ -17,6 +17,9 @@ import type {
   AffiliatePartnerPerformanceStats,
   AffiliateTopPerformer,
   AdminAffiliateInput,
+  AdminBlogInput,
+  BlogFaqItem,
+  BlogPost,
   Campaign,
   LoanCategory,
   Product,
@@ -361,6 +364,11 @@ function mapProduct(row: Record<string, unknown>): Product {
     exclusiveOffer: (row.exclusive_offer as string | null) ?? undefined,
     applyUrl: (row.apply_url as string | null) ?? undefined,
     imageUrl: (row.image_url as string | null) ?? undefined,
+    imageSizePreset:
+      (row.image_size_preset as Product["imageSizePreset"]) ?? "md",
+    imageDisplayWidth: (row.image_display_width as number | null) ?? undefined,
+    imageDisplayHeight:
+      (row.image_display_height as number | null) ?? undefined,
     isFeatured: row.is_featured as boolean,
     isActive: row.is_active as boolean,
     sortOrder: row.sort_order as number,
@@ -398,6 +406,9 @@ function productToRow(input: AdminProductInput) {
     exclusive_offer: input.exclusiveOffer?.trim() || null,
     apply_url: input.applyUrl?.trim() || null,
     image_url: input.imageUrl?.trim() || null,
+    image_size_preset: input.imageSizePreset ?? "md",
+    image_display_width: input.imageDisplayWidth ?? null,
+    image_display_height: input.imageDisplayHeight ?? null,
     is_featured: input.isFeatured,
     is_active: input.isActive,
     sort_order: input.sortOrder,
@@ -518,6 +529,93 @@ export async function deactivateAdminCampaign(
     .from("campaigns")
     .update({ is_active: false, updated_at: new Date().toISOString() })
     .eq("id", id);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+function mapBlogPost(row: Record<string, unknown>): BlogPost {
+  const faqRaw = row.faq as BlogFaqItem[] | null;
+
+  return {
+    slug: row.slug as string,
+    title: row.title as string,
+    excerpt: row.excerpt as string,
+    metaDescription: row.meta_description as string,
+    keywords: (row.keywords as string[]) ?? [],
+    category: row.category as BlogPost["category"],
+    body: row.body as string,
+    faq: faqRaw ?? [],
+    readingMinutes: row.reading_minutes as number,
+    isActive: row.is_active as boolean,
+    publishedAt: row.published_at as string,
+    updatedAt: row.updated_at as string,
+  };
+}
+
+function blogToRow(input: AdminBlogInput) {
+  return {
+    slug: input.slug.trim(),
+    title: input.title.trim(),
+    excerpt: input.excerpt.trim(),
+    meta_description: input.metaDescription.trim(),
+    keywords: input.keywords,
+    category: input.category,
+    body: input.body,
+    faq: input.faq,
+    reading_minutes: input.readingMinutes,
+    is_active: input.isActive,
+    published_at: input.publishedAt,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+export async function getAdminBlogPosts(
+  supabase: SupabaseClient,
+): Promise<BlogPost[]> {
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .order("published_at", { ascending: false });
+
+  if (error || !data) return [];
+  return data.map(mapBlogPost);
+}
+
+export async function getAdminBlogPostBySlug(
+  supabase: SupabaseClient,
+  slug: string,
+): Promise<BlogPost | null> {
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return mapBlogPost(data);
+}
+
+export async function upsertAdminBlogPost(
+  supabase: SupabaseClient,
+  input: AdminBlogInput,
+): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase
+    .from("blog_posts")
+    .upsert(blogToRow(input), { onConflict: "slug" });
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+export async function deactivateAdminBlogPost(
+  supabase: SupabaseClient,
+  slug: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase
+    .from("blog_posts")
+    .update({ is_active: false, updated_at: new Date().toISOString() })
+    .eq("slug", slug);
 
   if (error) return { ok: false, error: error.message };
   return { ok: true };

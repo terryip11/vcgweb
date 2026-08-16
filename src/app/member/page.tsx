@@ -28,7 +28,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { LoanCategory } from "@/types";
 
 export const metadata: Metadata = {
-  title: "會員中心 | 創健佳商業事務所 | VCG",
+  title: "會員中心 | VCG",
   description: "VCG 會員中心 — 管理個人資料及查看貸款查詢記錄。",
 };
 

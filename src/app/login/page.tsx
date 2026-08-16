@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import LoginForm from "@/components/auth/LoginForm";
 import PageShell from "@/components/layout/PageShell";
+import VcgLogo from "@/components/brand/VcgLogo";
 import { getAuthProviderStatus } from "@/lib/supabase/auth-settings";
 
 export const metadata: Metadata = {
-  title: "會員登入 | 創健佳商業事務所 | VCG",
+  title: "會員登入 | VCG",
   description:
     "使用 Google 或電郵登入 VCG 會員帳戶，管理貸款查詢及申請記錄。",
 };
@@ -33,8 +34,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <section className="flex min-h-[70vh] items-center justify-center bg-slate-50 px-4 py-16">
         <div className="w-full max-w-md rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-700 text-lg font-bold text-white">
-              VCG
+            <div className="mb-4 flex justify-center">
+              <VcgLogo size="lg" markOnly />
             </div>
             <h1 className="text-2xl font-bold text-slate-900">會員登入</h1>
             <p className="mt-2 text-sm text-slate-500">

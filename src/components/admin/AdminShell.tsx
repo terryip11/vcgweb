@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import AdminNav from "@/components/admin/AdminNav";
+import VcgLogo from "@/components/brand/VcgLogo";
 import { createClient } from "@/lib/supabase/client";
 
 function SidebarPanel({
@@ -22,18 +23,13 @@ function SidebarPanel({
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-slate-100 px-5 py-5">
-        <Link
-          href="/admin"
-          onClick={onNavigate}
-          className="flex items-center gap-2"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white">
-            VCG
-          </div>
-          <div>
-            <p className="text-sm font-bold text-slate-900">管理後台</p>
-            <p className="text-xs text-slate-400">Admin Console</p>
-          </div>
+        <Link href="/admin" onClick={onNavigate} className="flex items-center">
+          <VcgLogo
+            size="md"
+            variant="admin"
+            title="管理後台"
+            subtitle="Admin Console"
+          />
         </Link>
       </div>
 

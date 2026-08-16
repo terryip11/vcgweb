@@ -34,7 +34,7 @@ export default async function AdminLeadDetailPage({
     ? await getAdminProductById(supabase, lead.productId)
     : null;
 
-  const whatsappMessage = `你好 ${lead.name}，我係 VCG 創健佳，收到你嘅貸款查詢${
+  const whatsappMessage = `你好 ${lead.name}，我係 VCG，收到你嘅貸款查詢${
     lead.loanCategory
       ? `（${LOAN_CATEGORY_LABELS[lead.loanCategory]}）`
       : ""
