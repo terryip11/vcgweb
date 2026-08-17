@@ -11,7 +11,6 @@ const PUBLIC_ROUTES = [
   "/partner",
   "/partner/terms",
   "/lenders",
-  "/login",
   "/privacy",
   "/disclaimer",
   "/blog",

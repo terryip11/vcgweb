@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import GoogleAnalyticsPageView from "@/components/analytics/GoogleAnalyticsPageView";
 import PwaRegister from "@/components/pwa/PwaRegister";
+import SiteJsonLd from "@/components/seo/SiteJsonLd";
 import { getSiteUrl } from "@/lib/site";
 import "./globals.css";
 
@@ -80,6 +81,7 @@ export default function RootLayout({
   return (
     <html lang="zh-HK" className={`${notoSansTC.variable} scroll-smooth`}>
       <body className="min-h-screen bg-white font-sans text-slate-800 antialiased">
+        <SiteJsonLd />
         <GoogleAnalytics />
         <Suspense fallback={null}>
           <GoogleAnalyticsPageView />
