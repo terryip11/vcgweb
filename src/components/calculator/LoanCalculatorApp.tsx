@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import BankSelect from "@/components/calculator/BankSelect";
+import CalculatorWhatsAppShare from "@/components/calculator/CalculatorWhatsAppShare";
 import CategorySelect from "@/components/calculator/CategorySelect";
 import {
   calcDsr,
@@ -731,6 +732,19 @@ export default function LoanCalculatorApp() {
               {formatHKD(monthlyIncome, 2)} = {formatPercent(dsr.currentDsr, 2)}
             </p>
           </section>
+
+          <CalculatorWhatsAppShare
+            input={{
+              termResults,
+              revolvingResults,
+              totals,
+              property,
+              stressExtra,
+              effectiveValuation,
+              monthlyIncome,
+              dsr,
+            }}
+          />
 
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs leading-relaxed text-slate-400">
             免責聲明：本計算機僅供參考，計算邏輯参照內部 Excel
